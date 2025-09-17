@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+:root {
+  color-scheme: dark;
+}
+
+/* Links */
+a {
+  @apply transition hover:opacity-90;
+}
+
+/* Layout utilities */
+.container-edge {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+.section {
+  @apply py-12 md:py-16;
+}
+.card-surface {
+  @apply bg-surface/80 backdrop-blur border border-white/5 shadow-card rounded-2xl;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center font-bold rounded-xl h-11 px-5;
+}
+.btn-primary {
+  @apply bg-primary hover:bg-primaryAccent text-white;
+}
+.btn-outline {
+  @apply border border-white/10 bg-transparent text-textMain hover:bg-white/5;
+}
+
+/* Badge */
+.badge {
+  @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
+}
