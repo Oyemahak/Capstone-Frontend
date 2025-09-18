@@ -1,33 +1,28 @@
 import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
-import Card, { CardHeader, CardContent, CardTitle } from "../components/ui/Card.jsx";
-import Input from "../components/ui/Input.jsx";
-import Textarea from "../components/ui/Textarea.jsx";
-import Button from "../components/ui/Button.jsx";
 
 export default function Contact() {
   return (
-    <main className="section">
+    <section className="section">
       <Container>
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div>
-            <SectionTitle eyebrow="Contact" title="Tell us about your project" align="left" />
-            <div className="mt-6 space-y-4">
-              <Input placeholder="Your name" />
-              <Input placeholder="Email" type="email" />
-              <Textarea rows={6} placeholder="Your message" />
-              <Button className="w-full">Send message</Button>
-            </div>
+        <SectionTitle eyebrow="Contact" title="Tell us about your project" align="left" />
+        <div className="grid md:grid-cols-2 gap-6">
+          <form className="space-y-3">
+            <input className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4" placeholder="Your name" />
+            <input className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4" placeholder="Email" />
+            <textarea rows={6} className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3" placeholder="Your message" />
+            <button className="btn btn-primary w-full md:w-auto">Send message</button>
+          </form>
+          <div className="card-surface p-5">
+            <div className="font-black">How we’ll respond</div>
+            <ul className="text-textSub mt-3 space-y-2 text-sm">
+              <li>• You’ll get a reply within 1 business day.</li>
+              <li>• We’ll invite you to the client portal if it’s a fit.</li>
+              <li>• You can track progress, files, and discussions in one place.</li>
+            </ul>
           </div>
-          <Card>
-            <CardHeader><CardTitle>How we’ll respond</CardTitle></CardHeader>
-            <CardContent className="text-textSub space-y-2">
-              <div>• You’ll get a reply within 1 business day.</div>
-              <div>• We’ll invite you to the client portal if it’s a fit.</div>
-            </CardContent>
-          </Card>
         </div>
       </Container>
-    </main>
+    </section>
   );
 }

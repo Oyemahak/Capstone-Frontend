@@ -1,9 +1,9 @@
-export default function SectionTitle({ eyebrow, title, subtitle, align = "center" }) {
+export default function SectionTitle({ eyebrow, title, centered=false, align="center" }) {
+  const classes = centered ? "text-center" : (align === "left" ? "" : "text-center");
   return (
-    <div className={`${align === "center" ? "text-center" : ""} max-w-3xl mx-auto`}>
-      {eyebrow && <div className="text-xs font-black tracking-widest text-primary uppercase">{eyebrow}</div>}
-      <h2 className="mt-2 text-3xl md:text-4xl font-extrabold">{title}</h2>
-      {subtitle && <p className="mt-3 text-textSub">{subtitle}</p>}
+    <div className={`mb-8 ${classes}`}>
+      {eyebrow && <div className="text-primary text-xs tracking-widest font-black uppercase">{eyebrow}</div>}
+      {title && <h2 className="text-3xl md:text-4xl font-black mt-1">{title}</h2>}
     </div>
   );
 }

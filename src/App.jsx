@@ -1,4 +1,5 @@
-import { Routes, Route, useParams } from "react-router-dom";
+// src/App.jsx
+import { Routes, Route, Navigate } from "react-router-dom";
 import AppHeader from "./components/layout/AppHeader.jsx";
 import AppFooter from "./components/layout/AppFooter.jsx";
 
@@ -10,8 +11,6 @@ import Pricing from "./pages/Pricing.jsx";
 import Contact from "./pages/Contact.jsx";
 
 import Login from "./pages/auth/Login.jsx";
-import Apply from "./pages/applicant/Apply.jsx";
-import Requirements from "./pages/applicant/Requirements.jsx";
 
 import Dashboard from "./pages/client/Dashboard.jsx";
 import ProjectOverview from "./pages/client/ProjectOverview.jsx";
@@ -19,33 +18,35 @@ import ProjectFiles from "./pages/client/ProjectFiles.jsx";
 import ProjectDiscussion from "./pages/client/ProjectDiscussion.jsx";
 import Profile from "./pages/client/Profile.jsx";
 
-function ProjectDetailByParam() {
-  const { id } = useParams();
-  return <ProjectDetail id={id} />;
-}
-
 export default function App() {
   return (
-    <div className="min-h-screen bg-ink text-textMain">
+    // transparent wrapper so LiquidEther (on Home) can show through
+    <div className="min-h-screen flex flex-col">
       <AppHeader />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/projects/:id" element={<ProjectDetailByParam />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/contact" element={<Contact />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/apply" element={<Apply />} />
-        <Route path="/requirements" element={<Requirements />} />
+      {/* Header is fixed; pad main by header height */}
+      <main className="flex-1 pt-16">
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<Home />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
 
-        <Route path="/client" element={<Dashboard />} />
-        <Route path="/client/project/:id" element={<ProjectOverview />} />
-        <Route path="/client/project/:id/files" element={<ProjectFiles />} />
-        <Route path="/client/project/:id/discussion" element={<ProjectDiscussion />} />
-        <Route path="/client/profile" element={<Profile />} />
-      </Routes>
+          {/* Client portal */}
+          <Route path="/client" element={<Dashboard />} />
+          <Route path="/client/overview" element={<ProjectOverview />} />
+          <Route path="/client/files" element={<ProjectFiles />} />
+          <Route path="/client/discussion" element={<ProjectDiscussion />} />
+          <Route path="/client/profile" element={<Profile />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+
       <AppFooter />
     </div>
   );

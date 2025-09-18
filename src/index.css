@@ -2,39 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global styles */
+/* Keep layout width stable even when scrollbars appear */
 :root {
-  color-scheme: dark;
+  scrollbar-gutter: stable both-edges;
 }
 
-/* Links */
-a {
-  @apply transition hover:opacity-90;
+/* Let the background fill the screen */
+html,
+body,
+#root {
+  height: 100%;
 }
 
-/* Layout utilities */
+/* Transparent page background so the LiquidEther shows through */
+body {
+  @apply text-textMain antialiased bg-transparent;
+}
+
+/* Containers & sections */
 .container-edge {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
+
 .section {
-  @apply py-12 md:py-16;
+  @apply py-14 md:py-20;
 }
+
+/* Glassy card surface */
 .card-surface {
   @apply bg-surface/80 backdrop-blur border border-white/5 shadow-card rounded-2xl;
 }
 
-/* Buttons */
+/* Buttons, badges */
 .btn {
   @apply inline-flex items-center justify-center font-bold rounded-xl h-11 px-5;
 }
+
 .btn-primary {
   @apply bg-primary hover:bg-primaryAccent text-white;
 }
+
 .btn-outline {
   @apply border border-white/10 bg-transparent text-textMain hover:bg-white/5;
 }
 
-/* Badge */
 .badge {
   @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
+}
+
+/* If your header is fixed, this helps content start below it (used via pt-16 or pt-28/pt-32) */
+.main-pad-top {
+  padding-top: 4.25rem;
+}
+
+/* Forms */
+input,
+select,
+textarea {
+  @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 h-11;
+}
+
+textarea {
+  /* Tailwind: use resize-y (not resize-vertical) */
+  @apply h-40 py-3 resize-y;
+}
+
+/* Optional: force a vertical scrollbar to prevent layout shift */
+html {
+  overflow-y: scroll;
 }

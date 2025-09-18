@@ -1,22 +1,28 @@
 import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
-import Card, { CardHeader, CardContent, CardTitle } from "../components/ui/Card.jsx";
-import { services } from "../data/services.js";
+
+const items = [
+  { t: "Design", b: ["Wireframes & Hi-Fi", "Branding & Visual System", "Accessibility AA"] },
+  { t: "Development", b: ["React / Node", "WordPress / Wix", "Integrations & APIs"] },
+  { t: "Care", b: ["Hosting & SSL", "Updates", "Analytics & SEO"] },
+];
 
 export default function Services() {
   return (
-    <main className="section">
+    <section className="section">
       <Container>
-        <SectionTitle eyebrow="Services" title="Design, build, and support" />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map(s => (
-            <Card key={s.title}>
-              <CardHeader><CardTitle>{s.title}</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-textSub">{s.features.map(f => <div key={f}>• {f}</div>)}</CardContent>
-            </Card>
+        <SectionTitle eyebrow="Services" title="What we deliver" centered />
+        <div className="grid md:grid-cols-3 gap-6">
+          {items.map((c) => (
+            <div key={c.t} className="card-surface p-6">
+              <h3 className="font-extrabold">{c.t}</h3>
+              <ul className="mt-3 space-y-2 text-textSub text-sm">
+                {c.b.map((x) => <li key={x}>• {x}</li>)}
+              </ul>
+            </div>
           ))}
         </div>
       </Container>
-    </main>
+    </section>
   );
 }
