@@ -1,3 +1,4 @@
+// src/data/projects.js
 export const projects = [
   {
     id: "canstem-education",
@@ -13,7 +14,7 @@ export const projects = [
     summary: "WordPress salon site with services & bookings.",
     stack: ["WordPress"],
     thumb:
-      "https://images.unsplash.com/photo-1519415943484-09e3b6c2e0b0?q=80&w=1400&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=1400&auto=format&fit=crop",
   },
   {
     id: "mahak-portfolio-react",
