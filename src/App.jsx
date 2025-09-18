@@ -1,4 +1,3 @@
-// src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import AppHeader from "./components/layout/AppHeader.jsx";
 import AppFooter from "./components/layout/AppFooter.jsx";
@@ -20,11 +19,9 @@ import Profile from "./pages/client/Profile.jsx";
 
 export default function App() {
   return (
-    // transparent wrapper so LiquidEther (on Home) can show through
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-transparent text-textMain">
       <AppHeader />
 
-      {/* Header is fixed; pad main by header height */}
       <main className="flex-1 pt-16">
         <Routes>
           {/* Public */}

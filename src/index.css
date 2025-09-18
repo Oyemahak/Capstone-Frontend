@@ -2,24 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Keep layout width stable even when scrollbars appear */
+/* Keep layout width stable when scrollbars appear */
 :root {
   scrollbar-gutter: stable both-edges;
 }
 
-/* Let the background fill the screen */
+/* Allow full-height for the background */
 html,
 body,
 #root {
   height: 100%;
 }
 
-/* Transparent page background so the LiquidEther shows through */
+/* Transparent page bg so the WebGL shows through */
 body {
   @apply text-textMain antialiased bg-transparent;
 }
 
-/* Containers & sections */
+/* Layout helpers */
 .container-edge {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
@@ -28,12 +28,11 @@ body {
   @apply py-14 md:py-20;
 }
 
-/* Glassy card surface */
 .card-surface {
   @apply bg-surface/80 backdrop-blur border border-white/5 shadow-card rounded-2xl;
 }
 
-/* Buttons, badges */
+/* Buttons & badges */
 .btn {
   @apply inline-flex items-center justify-center font-bold rounded-xl h-11 px-5;
 }
@@ -50,11 +49,6 @@ body {
   @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
 }
 
-/* If your header is fixed, this helps content start below it (used via pt-16 or pt-28/pt-32) */
-.main-pad-top {
-  padding-top: 4.25rem;
-}
-
 /* Forms */
 input,
 select,
@@ -63,11 +57,20 @@ textarea {
 }
 
 textarea {
-  /* Tailwind: use resize-y (not resize-vertical) */
   @apply h-40 py-3 resize-y;
 }
 
-/* Optional: force a vertical scrollbar to prevent layout shift */
+/* Optional: keep scrollbar slot reserved */
 html {
   overflow-y: scroll;
+}
+
+/* Liquid container */
+.liquid-ether-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  /* DO NOT disable pointer events here – we listen on window for cursor */
+  touch-action: none;
 }
