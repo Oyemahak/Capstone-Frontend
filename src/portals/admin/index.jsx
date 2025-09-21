@@ -1,18 +1,19 @@
-import { Routes, Route } from 'react-router-dom';
-import RequireAuth from '../../components/auth/RequireAuth';
-import AdminDashboard from './AdminDashboard';
-import Approvals from './Approvals';
-import Users from './Users';
-import UserDetail from './UserDetail';
-import CreateUser from './CreateUser';
-import Projects from './Projects';
-import ProjectDetail from './ProjectDetail';
-import Settings from './Settings';
+import React, { Suspense, lazy } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-export default function AdminRoutes() {
+const AdminDashboard = lazy(() => import("./AdminDashboard.jsx"));
+const Approvals      = lazy(() => import("./Approvals.jsx"));
+const Users          = lazy(() => import("./Users.jsx"));
+const UserDetail     = lazy(() => import("./UserDetail.jsx"));
+const CreateUser     = lazy(() => import("./CreateUser.jsx"));
+const Projects       = lazy(() => import("./Projects.jsx"));
+const ProjectDetail  = lazy(() => import("./ProjectDetail.jsx"));
+const Settings       = lazy(() => import("./Settings.jsx"));
+
+export default function AdminPortal() {
   return (
-    <Routes>
-      <Route element={<RequireAuth roles={['admin']} />}>
+    <Suspense fallback={null}>
+      <Routes>
         <Route index element={<AdminDashboard />} />
         <Route path="approvals" element={<Approvals />} />
         <Route path="users" element={<Users />} />
@@ -21,7 +22,8 @@ export default function AdminRoutes() {
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:id" element={<ProjectDetail />} />
         <Route path="settings" element={<Settings />} />
-      </Route>
-    </Routes>
+        <Route path="*" element={<Navigate to="." replace />} />
+      </Routes>
+    </Suspense>
   );
 }

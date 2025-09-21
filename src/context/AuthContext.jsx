@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [auth, setAuth] = useState(() => {
+  const [authState, setAuthState] = useState(() => {
     try {
       const raw = localStorage.getItem("auth");
       return raw ? JSON.parse(raw) : null; // { token?, role, name, email, _id }
@@ -15,54 +15,55 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
 
-  // cross-tab sync
+  // Cross-tab sync
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === "auth") {
-        setAuth(e.newValue ? JSON.parse(e.newValue) : null);
+        setAuthState(e.newValue ? JSON.parse(e.newValue) : null);
       }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // optional: try to hydrate from server cookie (HTTP-only) on first load
+  // Optional hydration: only try /me if we already have a token
   useEffect(() => {
     let ignore = false;
     (async () => {
-      if (auth) return; // already have local auth
+      if (!authState?.token) return; // don’t hit /me anonymously (avoids 401 in console)
       try {
         setLoading(true);
         const me = await api.me().catch(() => null);
         if (!ignore && me?.user) {
           const data = {
+            token: authState.token,
             role: me.user.role,
             name: me.user.name,
             email: me.user.email,
             _id: me.user._id,
           };
           localStorage.setItem("auth", JSON.stringify(data));
-          setAuth(data);
+          setAuthState(data);
         }
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     })();
     return () => {
       ignore = true;
     };
-  }, []); // only once
+  }, [authState?.token]);
 
   const value = useMemo(
     () => ({
-      user: auth,
-      isAuthed: !!auth,
-      role: auth?.role ?? null,
+      user: authState,
+      isAuthed: !!authState?.token,
+      role: authState?.role ?? null,
       loading,
       setAuth: (data) => {
         if (data) localStorage.setItem("auth", JSON.stringify(data));
         else localStorage.removeItem("auth");
-        setAuth(data || null);
+        setAuthState(data || null);
       },
       logout: async () => {
         try {
@@ -71,10 +72,10 @@ export function AuthProvider({ children }) {
           // ignore
         }
         localStorage.removeItem("auth");
-        setAuth(null);
+        setAuthState(null);
       },
     }),
-    [auth, loading]
+    [authState, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

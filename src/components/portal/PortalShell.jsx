@@ -1,66 +1,65 @@
-import { Link, NavLink } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-
-const navByRole = {
-  admin: [
-    { to: '/admin', label: 'Dashboard' },
-    { to: '/admin/approvals', label: 'Approvals' },
-    { to: '/admin/users', label: 'Users' },
-    { to: '/admin/projects', label: 'Projects' },
-    { to: '/admin/settings', label: 'Settings' },
-  ],
-  developer: [
-    { to: '/dev', label: 'Dashboard' },
-    { to: '/dev/projects', label: 'My Projects' },
-    { to: '/dev/profile', label: 'Profile' },
-  ],
-  client: [
-    { to: '/client', label: 'Dashboard' },
-    { to: '/client/projects', label: 'Projects' },
-    { to: '/client/files', label: 'Files' },
-    { to: '/client/profile', label: 'Profile' },
-  ],
-};
+import { NavLink, Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext.jsx";
 
 export default function PortalShell({ children }) {
-  const { user, logout } = useAuth();
-  const items = navByRole[user?.role] || [];
+  const { role, user, logout } = useAuth();
+
+  const navs = {
+    admin: [
+      { to: "/admin", label: "Dashboard", end: true },
+      { to: "/admin/approvals", label: "Approvals" },
+      { to: "/admin/users", label: "Users" },
+      { to: "/admin/projects", label: "Projects" },
+      { to: "/admin/settings", label: "Settings" },
+    ],
+    developer: [
+      { to: "/dev", label: "Dashboard", end: true },
+      { to: "/dev/profile", label: "Profile" },
+    ],
+    client: [
+      { to: "/client", label: "Dashboard", end: true },
+      { to: "/client/files", label: "Files" },
+      { to: "/client/profile", label: "Profile" },
+    ],
+  };
+
+  const links = navs[role] || [];
+
+  const itemClass = ({ isActive }) =>
+    [
+      "block px-4 py-2 rounded-lg font-semibold",
+      isActive ? "bg-white/10" : "hover:bg-white/5",
+    ].join(" ");
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[260px_1fr]">
-      {/* Sidebar */}
-      <aside className="hidden lg:block border-r border-white/10 p-5 bg-surface/40 backdrop-blur">
-        <Link to="/" className="block text-xl font-black mb-8">MSPixelPlus</Link>
-        <nav className="space-y-1">
-          {items.map((i) => (
-            <NavLink
-              key={i.to}
-              to={i.to}
-              end
-              className={({ isActive }) =>
-                `block px-3 py-2 rounded-xl hover:bg-white/5 ${isActive ? 'bg-white/10 font-bold' : ''}`
-              }>
-              {i.label}
+    <div className="container-edge grid grid-cols-12 gap-6 py-6">
+      <aside className="col-span-12 md:col-span-3 lg:col-span-2">
+        <div className="card-surface p-4">
+          <div className="font-black text-lg">MSPixelPlus</div>
+          <div className="text-xs text-white/50 mt-1 capitalize">{role} Portal</div>
+        </div>
+        <nav className="mt-3 space-y-1">
+          {links.map((l) => (
+            <NavLink key={l.to} to={l.to} end={l.end} className={itemClass}>
+              {l.label}
             </NavLink>
           ))}
         </nav>
       </aside>
 
-      {/* Main */}
-      <div className="flex flex-col">
-        <header className="sticky top-0 z-50 border-b border-white/10 bg-surface/60 backdrop-blur">
-          <div className="flex items-center justify-between p-4">
-            <div className="font-extrabold">{user?.role?.toUpperCase()} Portal</div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-textSub hidden sm:block">
-                {user?.name} · {user?.email}
-              </span>
-              <button className="btn btn-outline" onClick={logout}>Logout</button>
-            </div>
+      <section className="col-span-12 md:col-span-9 lg:col-span-10">
+        <div className="card-surface p-4 mb-4 flex items-center justify-between">
+          <div className="text-sm">
+            <span className="text-white/70">{user?.name}</span>{" "}
+            <span className="text-white/40">· {user?.email}</span>
           </div>
-        </header>
-        <main className="p-4 md:p-6">{children}</main>
-      </div>
+          <div className="flex items-center gap-2">
+            <Link to="/" className="btn btn-outline h-9">Public Site</Link>
+            <button onClick={logout} className="btn btn-primary h-9">Logout</button>
+          </div>
+        </div>
+        {children}
+      </section>
     </div>
   );
 }

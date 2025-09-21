@@ -1,55 +1,44 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext.jsx";
 
-/**
- * Small helper to surface clearer messages for common network/CORS issues.
- */
 function prettyError(err) {
   const msg = (err?.message || "").toLowerCase();
-
   if (msg.includes("failed to fetch") || msg.includes("networkerror")) {
-    return "Couldn’t reach the server. If you’re on localhost, make sure the backend URL in .env is correct and running.";
+    return "Couldn’t reach the server. Check VITE_API_BASE and that the backend is running.";
   }
-  if (msg.includes("cors")) {
-    return "Blocked by CORS. Check CORS_ORIGIN on the backend matches this site’s URL.";
-  }
-  if (msg.includes("account not approved")) {
-    return "Your account is pending approval. An admin needs to activate it first.";
-  }
-  if (msg.includes("invalid credentials")) {
-    return "Email or password is incorrect.";
-  }
+  if (msg.includes("cors")) return "Blocked by CORS. Check CORS_ORIGIN on the backend.";
+  if (msg.includes("account not approved")) return "Your account is pending approval by an admin.";
+  if (msg.includes("invalid credentials")) return "Email or password is incorrect.";
   return err?.message || "Login failed. Please try again.";
 }
 
 export default function Login() {
   const nav = useNavigate();
   const location = useLocation();
-  const backTo = location.state?.from || "/";
+  const { setAuth } = useAuth();
 
-  // purely UI; the server decides the real role after login
   const [uiRole, setUiRole] = useState("client");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Prefill email domain for convenience when switching roles (optional nicety)
-  useEffect(() => {
-    if (!email) return;
-    // no-op, keep user input; this hook is mainly placeholder if later you want smart defaults
-  }, [uiRole]); // eslint-disable-line
-
-  // compute where to go based on the **actual** role returned by server
   const redirectFor = useMemo(
-    () => ({
-      admin: "/admin",       // your admin dashboard route (when you add it)
-      developer: "/client",  // placeholder: dev portal can later be /dev
-      client: "/client"
-    }),
+    () => ({ admin: "/admin", developer: "/dev", client: "/client" }),
     []
   );
+
+  function resolveTarget(afterRoleRoute) {
+    const from = location.state?.from;
+    // If we came here directly (no from) or from auth pages, ignore and go to the role default.
+    if (!from || from.startsWith("/login") || from.startsWith("/register")) {
+      return afterRoleRoute;
+    }
+    // If “from” exists and is not an auth page, honor it.
+    return from;
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -57,24 +46,19 @@ export default function Login() {
     setLoading(true);
     try {
       const { token, user } = await api.login(email.trim(), password);
-      // Persist auth
-      localStorage.setItem(
-        "auth",
-        JSON.stringify({
-          token,
-          role: user.role,
-          name: user.name,
-          email: user.email,
-          id: user._id,
-        })
-      );
 
-      // Decide destination:
-      // if they were kicked to /login from a protected route, go back there;
-      // otherwise, go to the default dashboard for their actual role.
+      const payload = {
+        token,
+        role: user.role,
+        name: user.name,
+        email: user.email,
+        _id: user._id,
+      };
+      localStorage.setItem("auth", JSON.stringify(payload));
+      setAuth(payload);
+
       const defaultPath = redirectFor[user.role] || "/client";
-      const target = backTo === "/login" ? defaultPath : backTo;
-      nav(target, { replace: true });
+      nav(resolveTarget(defaultPath), { replace: true });
     } catch (e2) {
       setErr(prettyError(e2));
     } finally {
@@ -89,11 +73,8 @@ export default function Login() {
         className="w-full max-w-md rounded-2xl bg-white/5 border border-white/10 p-6 md:p-8 backdrop-blur"
       >
         <h1 className="text-2xl font-extrabold tracking-tight">Sign in</h1>
-        <p className="text-sm text-white/60 mt-1">
-          Choose your role, then enter your credentials.
-        </p>
+        <p className="text-sm text-white/60 mt-1">Choose your role, then enter your credentials.</p>
 
-        {/* UI-only Role Toggle */}
         <div className="mt-5 inline-flex rounded-xl border border-white/10 overflow-hidden">
           {["client", "developer", "admin"].map((r) => (
             <button
@@ -102,7 +83,7 @@ export default function Login() {
               onClick={() => setUiRole(r)}
               className={[
                 "px-4 py-2 text-sm capitalize",
-                uiRole === r ? "bg-emerald-500/20 text-emerald-200" : "bg-transparent text-white/80 hover:bg-white/5"
+                uiRole === r ? "bg-emerald-500/20 text-emerald-200" : "bg-transparent text-white/80 hover:bg-white/5",
               ].join(" ")}
             >
               {r}
@@ -147,7 +128,7 @@ export default function Login() {
         </button>
 
         <p className="text-xs text-white/50 mt-4">
-          The role toggle is just a UI hint. Your access is determined by your account’s actual role on the server.
+          The role toggle is a UI hint. Your access is decided by your account’s role on the server.
         </p>
       </form>
     </div>

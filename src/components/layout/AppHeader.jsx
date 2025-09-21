@@ -1,59 +1,62 @@
-import { NavLink, useLocation } from "react-router-dom";
-import Container from "./Container.jsx";
-
-const nav = [
-  { to: "/", label: "Home" },
-  { to: "/projects", label: "Projects" },
-  { to: "/services", label: "Services" },
-  { to: "/pricing", label: "Pricing" },
-  { to: "/contact", label: "Contact" },
-];
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext.jsx";
 
 export default function AppHeader() {
-  const { pathname } = useLocation();
+  const { isAuthed, role, user, logout } = useAuth();
+  const nav = useNavigate();
+
+  function portalPath() {
+    if (role === "admin") return "/admin";
+    if (role === "developer") return "/dev";
+    return "/client";
+  }
+
+  async function doLogout() {
+    await logout();
+    nav("/", { replace: true });
+  }
+
+  const linkClass = ({ isActive }) =>
+    [
+      "px-3 py-2 rounded-lg text-sm font-semibold",
+      isActive ? "bg-white/10" : "hover:bg-white/5",
+    ].join(" ");
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50">
-      {/* subtle gradient behind header */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 to-transparent" />
-      <div className="backdrop-blur supports-[backdrop-filter]:bg-surface/40 border-b border-white/10">
-        <Container className="h-16 flex items-center justify-between">
-          <div className="font-black tracking-tight">MSPixelPulse</div>
+    <header className="fixed inset-x-0 top-0 z-40 backdrop-blur bg-black/40 border-b border-white/10">
+      <div className="container-edge h-16 flex items-center justify-between">
+        <Link to="/" className="font-black">MSPixelPulse</Link>
 
-          <nav className="hidden md:flex gap-2">
-            {nav.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-lg text-sm font-semibold transition ${
-                    isActive
-                      ? "bg-white/10 text-white"
-                      : "text-textSub hover:bg-white/5"
-                  }`
-                }
-              >
-                {n.label}
+        <nav className="hidden md:flex items-center gap-1">
+          <NavLink to="/" className={linkClass} end>Home</NavLink>
+          <NavLink to="/projects" className={linkClass}>Projects</NavLink>
+          <NavLink to="/services" className={linkClass}>Services</NavLink>
+          <NavLink to="/pricing" className={linkClass}>Pricing</NavLink>
+          <NavLink to="/contact" className={linkClass}>Contact</NavLink>
+        </nav>
+
+        <div className="flex items-center gap-2">
+          {!isAuthed ? (
+            <>
+              <NavLink to="/login" className={({ isActive }) =>
+                ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
+                 isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
+              }>
+                Login
               </NavLink>
-            ))}
-          </nav>
-
-          <div className="hidden md:flex gap-2">
-            <NavLink to="/login" className="btn btn-outline h-9 px-4">
-              Login
-            </NavLink>
-            <NavLink to="/contact" className="btn btn-primary h-9 px-4">
-              Start Project
-            </NavLink>
-          </div>
-        </Container>
+              <Link to="/contact" className="btn btn-primary h-10">Start Project</Link>
+            </>
+          ) : (
+            <>
+              <span className="hidden sm:block text-xs text-white/60">
+                {user?.name} · {user?.email}
+              </span>
+              <Link to={portalPath()} className="btn btn-outline h-10">Portal</Link>
+              <button onClick={doLogout} className="btn btn-primary h-10">Logout</button>
+            </>
+          )}
+        </div>
       </div>
-
-      {/* active route underline shimmer */}
-      <div className="absolute inset-x-0 top-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-      {pathname !== "/" && (
-        <div className="absolute inset-x-0 -z-10 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent" />
-      )}
     </header>
   );
 }
