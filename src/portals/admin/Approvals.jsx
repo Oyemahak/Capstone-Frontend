@@ -1,65 +1,40 @@
-import { useEffect, useState } from 'react';
-import PortalShell from '../../components/portal/PortalShell';
-import { api } from '../../lib/api';
+// src/portals/admin/Approvals.jsx
+import { useEffect, useState } from "react";
+import { admin } from "@/lib/api.js";
 
 export default function Approvals() {
   const [rows, setRows] = useState([]);
-  const [busy, setBusy] = useState('');
 
   async function load() {
-    const users = await api.listUsers('status=pending');
-    setRows(users);
+    const list = await admin.listPending();
+    setRows(Array.isArray(list) ? list : list?.users || []);
   }
   useEffect(() => { load(); }, []);
 
-  async function approve(id) {
-    setBusy(id);
-    try {
-      await api.approveUser(id);
-      await load();
-    } finally {
-      setBusy('');
-    }
-  }
-
   return (
-    <PortalShell>
-      <h1 className="text-2xl font-black mb-4">Pending Approvals</h1>
-      <div className="card-surface p-4 overflow-x-auto">
-        <table className="min-w-[700px] w-full text-sm">
-          <thead>
-            <tr className="text-left text-textSub">
-              <th className="py-2">Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th className="text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(u => (
-              <tr key={u._id} className="border-t border-white/10">
-                <td className="py-3">{u.name}</td>
-                <td>{u.email}</td>
-                <td>{u.role}</td>
-                <td>{u.status}</td>
-                <td className="text-right">
-                  <button
-                    onClick={() => approve(u._id)}
-                    className="btn btn-primary disabled:opacity-50"
-                    disabled={busy === u._id}
-                  >
-                    {busy === u._id ? 'Approving…' : 'Approve'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {!rows.length && (
-              <tr><td colSpan="5" className="py-6 text-center text-textSub">No pending requests.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </PortalShell>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Pending Users</h1>
+      <ul className="space-y-2">
+        {rows.map(u=>(
+          <li key={u._id} className="flex items-center justify-between rounded-2xl border border-white/10 p-3">
+            <div>
+              <b>{u.name || "(no name)"}</b> — {u.email}
+              <span className="ml-2 text-xs text-white/60">(role: {u.role})</span>
+            </div>
+            <div className="space-x-2 text-sm">
+              <button className="bg-brand text-black rounded px-3 py-1"
+                      onClick={async()=>{ await admin.approveUser(u._id); load(); }}>
+                Approve
+              </button>
+              <button className="rounded px-3 py-1 border border-white/20"
+                      onClick={async()=>{ await admin.deleteUser(u._id); load(); }}>
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+        {!rows.length && <li className="text-white/60">Nothing pending.</li>}
+      </ul>
+    </div>
   );
 }

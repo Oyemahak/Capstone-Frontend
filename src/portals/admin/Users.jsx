@@ -1,59 +1,62 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import PortalShell from '../../components/portal/PortalShell';
-import { api } from '../../lib/api';
+// src/portals/admin/Users.jsx
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { admin } from "@/lib/api.js";
 
 export default function Users() {
   const [rows, setRows] = useState([]);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState("");
 
   async function load() {
-    const users = await api.listUsers(q ? `q=${encodeURIComponent(q)}` : '');
-    setRows(users);
+    const data = await admin.listUsers(q ? `q=${encodeURIComponent(q)}` : "");
+    setRows(Array.isArray(data) ? data : data?.users || []);
   }
-  useEffect(() => { load(); }, []); // initial
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   return (
-    <PortalShell>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-black">Users</h1>
-        <Link to="/admin/users/new" className="btn btn-primary">Create User</Link>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Users</h1>
+      <div className="flex gap-2">
+        <input className="border border-white/10 bg-transparent rounded p-2 flex-1"
+               placeholder="Search name or email" value={q} onChange={e=>setQ(e.target.value)} />
+        <button className="px-3 py-2 rounded bg-brand text-black" onClick={load}>Search</button>
       </div>
 
-      <div className="card-surface p-4 mb-3 flex items-center gap-2">
-        <input className="flex-1" placeholder="Search name/email…" value={q} onChange={e => setQ(e.target.value)} />
-        <button onClick={load} className="btn btn-outline">Search</button>
-      </div>
-
-      <div className="card-surface p-4 overflow-x-auto">
-        <table className="min-w-[800px] w-full text-sm">
-          <thead>
-            <tr className="text-left text-textSub">
-              <th className="py-2">Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created</th>
+      <div className="rounded-2xl border border-white/10 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5">
+            <tr>
+              <Th>Name</Th><Th>Email</Th><Th>Role</Th><Th>Status</Th><Th>Actions</Th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(u => (
-              <tr key={u._id} className="border-t border-white/10">
-                <td className="py-3">
-                  <Link className="underline" to={`/admin/users/${u._id}`}>{u.name}</Link>
-                </td>
-                <td>{u.email}</td>
-                <td>{u.role}</td>
-                <td>{u.status}</td>
-                <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-              </tr>
-            ))}
-            {!rows.length && (
-              <tr><td colSpan="5" className="py-6 text-center text-textSub">No users.</td></tr>
-            )}
+          {rows.map(u=>(
+            <tr key={u._id} className="border-t border-white/10">
+              <Td>{u.name || "—"}</Td>
+              <Td>{u.email}</Td>
+              <Td className="capitalize">{u.role}</Td>
+              <Td className="capitalize">{u.status}</Td>
+              <Td>
+                <Link to={`/admin/users/${u._id}`} className="underline mr-3">Open</Link>
+                {u.status !== "active" && (
+                  <button className="underline mr-3" onClick={async()=>{ await admin.approveUser(u._id); load(); }}>Approve</button>
+                )}
+                <button className="underline mr-3" onClick={async()=>{ 
+                  const next = u.role === "developer" ? "client" : "developer";
+                  await admin.updateRole(u._id, next); load();
+                }}>Toggle role</button>
+                <button className="underline text-rose-300" onClick={async()=>{ await admin.deleteUser(u._id); load(); }}>Delete</button>
+              </Td>
+            </tr>
+          ))}
+          {!rows.length && <tr><Td colSpan="5" className="text-center text-white/60 py-6">No users</Td></tr>}
           </tbody>
         </table>
       </div>
-    </PortalShell>
+    </div>
   );
 }
+
+function Th({ children }) { return <th className="text-left p-3">{children}</th>; }
+function Td({ children, colSpan }) { return <td colSpan={colSpan} className="p-3 align-top">{children}</td>; }

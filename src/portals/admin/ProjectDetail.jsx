@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import PortalShell from '../../components/portal/PortalShell';
-import { api } from '../../lib/api';
+// src/portals/admin/ProjectDetail.jsx
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { admin, projects } from "@/lib/api.js";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -9,82 +9,94 @@ export default function ProjectDetail() {
   const [p, setP] = useState(null);
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      const [project, allUsers] = await Promise.all([
-        api.getProject(id),
-        api.listUsers(),
-      ]);
-      setP(project);
-      setUsers(allUsers);
-    })();
-  }, [id]);
+  async function load() {
+    const [proj, allUsers] = await Promise.all([
+      projects.get(id),
+      admin.listUsers()
+    ]);
+    setP(proj);
+    setUsers(allUsers);
+  }
+  useEffect(() => { load(); }, [id]);
 
-  async function save(e) {
-    e.preventDefault();
-    const payload = {
+  async function save() {
+    const body = {
       title: p.title,
       summary: p.summary,
-      status: p.status,
+      status: p.status,        // draft | active | paused | completed
       client: p.client?._id || p.client || null,
       developer: p.developer?._id || p.developer || null,
     };
-    await api.updateProject(id, payload);
-    nav('/admin/projects');
+    const up = await projects.update(p._id, body);
+    setP(up);
   }
 
-  if (!p) return <PortalShell><div className="card-surface p-6">Loading…</div></PortalShell>;
+  async function remove() {
+    if (!confirm("Delete this project?")) return;
+    await projects.remove(p._id);
+    nav("/admin/projects");
+  }
 
-  const developers = users.filter(u => u.role === 'developer' && u.status === 'active');
-  const clients = users.filter(u => u.role === 'client' && u.status !== 'suspended');
+  const clients = users.filter(u => u.role === "client");
+  const devs    = users.filter(u => u.role === "developer");
 
   return (
-    <PortalShell>
-      <h1 className="text-2xl font-black mb-4">Edit Project</h1>
-      <form onSubmit={save} className="card-surface p-6 max-w-2xl">
-        <label className="block text-sm mb-1">Title</label>
-        <input value={p.title} onChange={e => setP({ ...p, title: e.target.value })} />
-
-        <label className="block text-sm mt-4 mb-1">Summary</label>
-        <textarea value={p.summary || ''} onChange={e => setP({ ...p, summary: e.target.value })} />
-
-        <div className="grid md:grid-cols-3 gap-3 mt-4">
-          <div>
-            <label className="block text-sm mb-1">Status</label>
-            <select value={p.status} onChange={e => setP({ ...p, status: e.target.value })}>
-              <option>draft</option>
-              <option>active</option>
-              <option>paused</option>
-              <option>completed</option>
-            </select>
+    <div className="space-y-4">
+      <button className="underline" onClick={()=>nav(-1)}>← Back</button>
+      {!p ? <div>Loading…</div> : (
+        <>
+          <h1 className="text-xl font-semibold">Project: {p.title}</h1>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Title">
+              <input className="border border-white/10 bg-transparent rounded p-2 w-full"
+                     value={p.title || ""} onChange={e=>setP({...p, title: e.target.value})} />
+            </Field>
+            <Field label="Status">
+              <select className="border border-white/10 bg-black rounded p-2 w-full"
+                      value={p.status} onChange={e=>setP({...p, status: e.target.value})}>
+                <option value="draft">draft</option>
+                <option value="active">active</option>
+                <option value="paused">paused</option>
+                <option value="completed">completed</option>
+              </select>
+            </Field>
+            <Field label="Client">
+              <select className="border border-white/10 bg-black rounded p-2 w-full"
+                      value={p.client?._id || p.client || ""}
+                      onChange={e=>setP({...p, client: e.target.value || null})}>
+                <option value="">— none —</option>
+                {clients.map(c => <option key={c._id} value={c._id}>{c.name || c.email}</option>)}
+              </select>
+            </Field>
+            <Field label="Developer">
+              <select className="border border-white/10 bg-black rounded p-2 w-full"
+                      value={p.developer?._id || p.developer || ""}
+                      onChange={e=>setP({...p, developer: e.target.value || null})}>
+                <option value="">— none —</option>
+                {devs.map(d => <option key={d._id} value={d._id}>{d.name || d.email}</option>)}
+              </select>
+            </Field>
+            <Field label="Summary" wide>
+              <textarea className="border border-white/10 bg-transparent rounded p-2 w-full h-28"
+                        value={p.summary || ""} onChange={e=>setP({...p, summary: e.target.value})} />
+            </Field>
           </div>
-          <div>
-            <label className="block text-sm mb-1">Client</label>
-            <select
-              value={p.client?._id || p.client || ''}
-              onChange={e => setP({ ...p, client: e.target.value || null })}
-            >
-              <option value="">—</option>
-              {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Developer</label>
-            <select
-              value={p.developer?._id || p.developer || ''}
-              onChange={e => setP({ ...p, developer: e.target.value || null })}
-            >
-              <option value="">—</option>
-              {developers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-            </select>
-          </div>
-        </div>
 
-        <div className="mt-6 flex gap-3">
-          <button className="btn btn-primary">Save</button>
-          <button type="button" onClick={() => nav(-1)} className="btn btn-outline">Cancel</button>
-        </div>
-      </form>
-    </PortalShell>
+          <div className="flex gap-3">
+            <button className="bg-brand text-black rounded px-4 py-2" onClick={save}>Save</button>
+            <button className="border border-white/20 rounded px-4 py-2" onClick={remove}>Delete</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, children, wide }) {
+  return (
+    <label className={`block ${wide ? "sm:col-span-2" : ""}`}>
+      <div className="text-xs text-white/60 mb-1">{label}</div>
+      {children}
+    </label>
   );
 }

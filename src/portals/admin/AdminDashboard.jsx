@@ -1,53 +1,42 @@
-import { useEffect, useState } from 'react';
-import PortalShell from '../../components/portal/PortalShell';
-import { api } from '../../lib/api';
+// src/portals/admin/AdminDashboard.jsx
+import { useEffect, useState } from "react";
+import { admin, projects } from "@/lib/api.js";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [counts, setCounts] = useState({ users: 0, pending: 0, projects: 0 });
 
   useEffect(() => {
     (async () => {
-      try {
-        const [users, projects] = await Promise.all([
-          api.listUsers(),
-          api.listProjects(),
-        ]);
-        const pending = users.filter(u => u.status === 'pending').length;
-        setStats({
-          users: users.length,
-          pending,
-          projects: projects.length,
-        });
-      } catch (e) {
-        // Silent
-      } finally {
-        setLoading(false);
-      }
+      const [all, pend, pro] = await Promise.all([
+        admin.listUsers(),
+        admin.listPending(),
+        projects.list(),
+      ]);
+      setCounts({
+        users: all?.length || 0,
+        pending: pend?.length || 0,
+        projects: pro?.length || 0,
+      });
     })();
   }, []);
 
   return (
-    <PortalShell>
-      <h1 className="text-2xl font-black mb-4">Overview</h1>
-      {loading ? (
-        <div className="card-surface p-6">Loading…</div>
-      ) : (
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="card-surface p-5">
-            <div className="text-textSub text-sm">Total Users</div>
-            <div className="text-3xl font-black mt-1">{stats?.users ?? 0}</div>
-          </div>
-          <div className="card-surface p-5">
-            <div className="text-textSub text-sm">Pending Approvals</div>
-            <div className="text-3xl font-black mt-1">{stats?.pending ?? 0}</div>
-          </div>
-          <div className="card-surface p-5">
-            <div className="text-textSub text-sm">Projects</div>
-            <div className="text-3xl font-black mt-1">{stats?.projects ?? 0}</div>
-          </div>
-        </div>
-      )}
-    </PortalShell>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <Card label="Users" value={counts.users} />
+        <Card label="Pending" value={counts.pending} />
+        <Card label="Projects" value={counts.projects} />
+      </div>
+    </div>
+  );
+}
+
+function Card({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-white/10 p-4 bg-black/20">
+      <div className="text-sm text-white/60">{label}</div>
+      <div className="text-2xl font-semibold">{value}</div>
+    </div>
   );
 }

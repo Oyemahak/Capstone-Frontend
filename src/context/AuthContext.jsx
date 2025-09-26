@@ -1,88 +1,57 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { auth } from "@/lib/api.js";
 
-const AuthContext = createContext(null);
+const Ctx = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [authState, setAuthState] = useState(() => {
-    try {
-      const raw = localStorage.getItem("auth");
-      return raw ? JSON.parse(raw) : null; // { token?, role, name, email, _id }
-    } catch {
-      return null;
-    }
-  });
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [checked, setChecked] = useState(false);
 
-  // Cross-tab sync
+  // Check cookie session once on mount
   useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "auth") {
-        setAuthState(e.newValue ? JSON.parse(e.newValue) : null);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  // Optional hydration: only try /me if we already have a token
-  useEffect(() => {
-    let ignore = false;
+    let alive = true;
     (async () => {
-      if (!authState?.token) return; // don’t hit /me anonymously (avoids 401 in console)
       try {
-        setLoading(true);
-        const me = await api.me().catch(() => null);
-        if (!ignore && me?.user) {
-          const data = {
-            token: authState.token,
-            role: me.user.role,
-            name: me.user.name,
-            email: me.user.email,
-            _id: me.user._id,
-          };
-          localStorage.setItem("auth", JSON.stringify(data));
-          setAuthState(data);
-        }
+        const r = await auth.me();
+        if (alive) setUser(r?.user || null);
+      } catch {
+        if (alive) setUser(null);
       } finally {
-        if (!ignore) setLoading(false);
+        if (alive) setChecked(true);
       }
     })();
-    return () => {
-      ignore = true;
+    return () => { alive = false; };
+  }, []);
+
+  const login = useCallback(async (email, password) => {
+    const r = await auth.login(email, password);
+    setUser(r?.user || null);
+    return r?.user || null;
+  }, []);
+
+  const logout = useCallback(async () => {
+    try { await auth.logout(); } catch {}
+    setUser(null);
+  }, []);
+
+  const value = useMemo(() => {
+    const role = user?.role || null;
+    return {
+      user,
+      role,
+      isAuthed: !!user,
+      checked,
+      login,
+      logout,
     };
-  }, [authState?.token]);
+  }, [user, checked, login, logout]);
 
-  const value = useMemo(
-    () => ({
-      user: authState,
-      isAuthed: !!authState?.token,
-      role: authState?.role ?? null,
-      loading,
-      setAuth: (data) => {
-        if (data) localStorage.setItem("auth", JSON.stringify(data));
-        else localStorage.removeItem("auth");
-        setAuthState(data || null);
-      },
-      logout: async () => {
-        try {
-          await api.logout();
-        } catch {
-          // ignore
-        }
-        localStorage.removeItem("auth");
-        setAuthState(null);
-      },
-    }),
-    [authState, loading]
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
   return ctx;
 }

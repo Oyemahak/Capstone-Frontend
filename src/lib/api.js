@@ -1,74 +1,44 @@
 // src/lib/api.js
+export const API_BASE = import.meta.env.VITE_API_BASE?.replace(/\/$/, "") || "http://localhost:4000/api";
 
-// API base points at the /api namespace on your backend (Render in prod)
-const API_BASE =
-  (import.meta.env.VITE_API_BASE || "http://localhost:4000/api").replace(/\/$/, "");
-
-// For hitting non-/api endpoints like /health
-const API_HOST = API_BASE.replace(/\/api$/, "");
-
-// Read bearer token from localStorage (set by Login.jsx)
-function authHeader() {
-  try {
-    const raw = localStorage.getItem("auth");
-    const token = raw ? JSON.parse(raw)?.token : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  } catch {
-    return {};
-  }
-}
-
-async function request(path, { method = "GET", body, headers = {}, ...rest } = {}) {
+async function http(path, { method = "GET", body, headers } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     method,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeader(),
-      ...headers,
-    },
+    headers: { "Content-Type": "application/json", ...(headers || {}) },
+    credentials: "include",              // <- send/receive cookie
     body: body ? JSON.stringify(body) : undefined,
-    ...rest,
   });
-
   const isJSON = res.headers.get("content-type")?.includes("application/json");
-  const data = isJSON ? await res.json().catch(() => ({})) : null;
+  const data = isJSON ? await res.json().catch(() => ({})) : await res.text();
 
-  if (!res.ok) throw new Error(data?.message || `Request failed: ${res.status}`);
+  if (!res.ok) {
+    const msg = (isJSON && data?.message) || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
   return data;
 }
 
-export const api = {
-  // ---- Misc
-  // FIX: /health lives on the host root, not under /api
-  health: async () => {
-    const r = await fetch(`${API_HOST}/health`, { credentials: "include" });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j?.message || `Health failed: ${r.status}`);
-    return j;
-  },
+export const auth = {
+  login: (email, password) => http("/auth/login", { method: "POST", body: { email, password } }),
+  logout: () => http("/auth/logout", { method: "POST" }),
+  me: () => http("/auth/me"),
+};
 
-  // ---- Auth
-  me: () => request("/auth/me"),
-  login: (email, password) => request("/auth/login", { method: "POST", body: { email, password } }),
-  register: (payload) => request("/auth/register", { method: "POST", body: payload }),
-  logout: () => request("/auth/logout", { method: "POST" }),
+export const admin = {
+  users: () => http("/admin/users"),
+  createUser: (payload) => http("/admin/users", { method: "POST", body: payload }),
+};
 
-  // ---- Users (admin)
-  listUsers: (query = "") => request(`/users${query ? `?${query}` : ""}`),
-  getUser: (id) => request(`/users/${id}`),
-  createUser: (payload) => request("/users", { method: "POST", body: payload }),
-  updateUser: (id, payload) => request(`/users/${id}`, { method: "PUT", body: payload }),
-  approveUser: (id) => request(`/users/${id}/approve`, { method: "POST" }),
-  deleteUser: (id) => request(`/users/${id}`, { method: "DELETE" }),
+export const projects = {
+  list: () => http("/projects"),
+  create: (payload) => http("/projects", { method: "POST", body: payload }),
+  update: (id, payload) => http(`/projects/${id}`, { method: "PATCH", body: payload }),
+};
 
-  // ---- Projects
-  listProjects: (query = "") => request(`/projects${query ? `?${query}` : ""}`),
-  getProject: (id) => request(`/projects/${id}`),
-  createProject: (payload) => request("/projects", { method: "POST", body: payload }),
-  updateProject: (id, payload) => request(`/projects/${id}`, { method: "PUT", body: payload }),
-  deleteProject: (id) => request(`/projects/${id}`, { method: "DELETE" }),
-
-  // ---- Files (stub)
-  listFiles: (projectId) => request(`/files?project=${projectId}`),
+export const debug = {
+  seedBasic: () => http("/debug/seed-basic", { method: "POST" }),
+  resetBasic: () => http("/debug/reset-basic", { method: "POST" }),
 };

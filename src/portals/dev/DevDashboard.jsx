@@ -1,27 +1,23 @@
-import { useEffect, useState } from 'react';
-import PortalShell from '../../components/portal/PortalShell';
-import { api } from '../../lib/api';
+// src/portals/dev/DevDashboard.jsx
+import { useEffect, useState } from "react";
+import { projects } from "@/lib/api.js";
 
 export default function DevDashboard() {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    api.listProjects('mine=developer').then(setProjects).catch(() => setProjects([]));
-  }, []);
-
+  const [list, setList] = useState([]);
+  useEffect(() => { (async()=>{ const l = await projects.list(); setList(Array.isArray(l)?l:(l?.projects||[])); })(); }, []);
   return (
-    <PortalShell>
-      <h1 className="text-2xl font-black mb-4">My Work</h1>
-      <div className="grid md:grid-cols-2 gap-4">
-        {projects.map(p => (
-          <div key={p._id} className="card-surface p-5">
-            <div className="font-bold">{p.title}</div>
-            <div className="text-textSub text-sm">{p.summary || '—'}</div>
-            <div className="text-xs mt-2">Status: <span className="font-semibold">{p.status}</span></div>
-          </div>
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Assigned Projects</h1>
+      <ul className="grid sm:grid-cols-2 gap-4">
+        {list.map(p=>(
+          <li key={p._id} className="border border-white/10 rounded-2xl p-4 bg-black/20">
+            <div className="font-semibold">{p.title}</div>
+            <div className="text-xs text-white/60 capitalize">Status: {p.status}</div>
+            <div className="text-sm mt-2">{p.summary || "—"}</div>
+          </li>
         ))}
-        {!projects.length && <div className="card-surface p-6">No assigned projects yet.</div>}
-      </div>
-    </PortalShell>
+        {!list.length && <div className="text-white/60">No assignments.</div>}
+      </ul>
+    </div>
   );
 }

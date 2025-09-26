@@ -1,43 +1,38 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { api } from "@/lib/api";
+// src/pages/auth/Login.jsx
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
-function prettyError(err) {
-  const msg = (err?.message || "").toLowerCase();
-  if (msg.includes("failed to fetch") || msg.includes("networkerror")) {
-    return "Couldn’t reach the server. Check VITE_API_BASE and that the backend is running.";
-  }
-  if (msg.includes("cors")) return "Blocked by CORS. Check CORS_ORIGIN on the backend.";
-  if (msg.includes("account not approved")) return "Your account is pending approval by an admin.";
-  if (msg.includes("invalid credentials")) return "Email or password is incorrect.";
-  return err?.message || "Login failed. Please try again.";
-}
+const TABS = [
+  { key: "client",    label: "Client",    email: "client@mspixel.pulse",    password: "client" },
+  { key: "developer", label: "Developer", email: "dev@mspixel.pulse",       password: "developer" },
+  { key: "admin",     label: "Admin",     email: "admin@mspixel.pulse",     password: "admin" },
+];
 
 export default function Login() {
+  const { isAuthed, role, login } = useAuth();
   const nav = useNavigate();
-  const location = useLocation();
-  const { setAuth } = useAuth();
 
-  const [uiRole, setUiRole] = useState("client");
+  const [tab, setTab] = useState("client");
+  const active = useMemo(() => TABS.find((t) => t.key === tab), [tab]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectFor = useMemo(
-    () => ({ admin: "/admin", developer: "/dev", client: "/client" }),
-    []
-  );
+  // Already authed? bounce to portal
+  useEffect(() => {
+    if (!isAuthed) return;
+    if (role === "admin") nav("/admin", { replace: true });
+    else if (role === "developer") nav("/dev", { replace: true });
+    else nav("/client", { replace: true });
+  }, [isAuthed, role, nav]);
 
-  function resolveTarget(afterRoleRoute) {
-    const from = location.state?.from;
-    // If we came here directly (no from) or from auth pages, ignore and go to the role default.
-    if (!from || from.startsWith("/login") || from.startsWith("/register")) {
-      return afterRoleRoute;
-    }
-    // If “from” exists and is not an auth page, honor it.
-    return from;
+  function fillDemo() {
+    if (!active) return;
+    setEmail(active.email);
+    setPassword(active.password);
   }
 
   async function onSubmit(e) {
@@ -45,92 +40,116 @@ export default function Login() {
     setErr("");
     setLoading(true);
     try {
-      const { token, user } = await api.login(email.trim(), password);
-
-      const payload = {
-        token,
-        role: user.role,
-        name: user.name,
-        email: user.email,
-        _id: user._id,
-      };
-      localStorage.setItem("auth", JSON.stringify(payload));
-      setAuth(payload);
-
-      const defaultPath = redirectFor[user.role] || "/client";
-      nav(resolveTarget(defaultPath), { replace: true });
-    } catch (e2) {
-      setErr(prettyError(e2));
+      const u = await login(email, password);
+      if (!u) throw new Error("Login failed");
+      const r = u.role;
+      if (r === "admin") nav("/admin", { replace: true });
+      else if (r === "developer") nav("/dev", { replace: true });
+      else nav("/client", { replace: true });
+    } catch (ex) {
+      setErr(ex?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-[72vh] grid place-items-center px-4">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-md rounded-2xl bg-white/5 border border-white/10 p-6 md:p-8 backdrop-blur"
-      >
-        <h1 className="text-2xl font-extrabold tracking-tight">Sign in</h1>
-        <p className="text-sm text-white/60 mt-1">Choose your role, then enter your credentials.</p>
-
-        <div className="mt-5 inline-flex rounded-xl border border-white/10 overflow-hidden">
-          {["client", "developer", "admin"].map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setUiRole(r)}
-              className={[
-                "px-4 py-2 text-sm capitalize",
-                uiRole === r ? "bg-emerald-500/20 text-emerald-200" : "bg-transparent text-white/80 hover:bg-white/5",
-              ].join(" ")}
-            >
-              {r}
-            </button>
-          ))}
+    <div className="px-4 md:px-6 lg:px-8 py-14">
+      <div className="max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/30 backdrop-blur-md">
+        {/* Header */}
+        <div className="px-6 pt-6">
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+          <p className="text-sm text-white/60 mt-1">
+            Choose your role, then enter your credentials.
+          </p>
         </div>
 
-        {err && (
-          <div className="mt-4 rounded-lg bg-rose-500/15 border border-rose-500/30 px-3 py-2 text-sm text-rose-200">
-            {err}
+        <div className="px-6 pt-5">
+          {/* Segmented Tabs */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white/10 border border-white/10">
+            {TABS.map((t) => {
+              const selected = t.key === tab;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={[
+                    "px-3 py-1.5 text-sm rounded-lg transition-colors",
+                    "focus:outline-none focus:ring-2 focus:ring-emerald-400/70",
+                    selected
+                      // selected = white text + subtle filled bg (same vibe as hover)
+                      ? "text-white bg-white/15"
+                      // unselected = white/80 -> white on hover; subtle hover bg
+                      : "text-white/80 hover:text-white hover:bg-white/10",
+                  ].join(" ")}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        <label className="block text-sm mt-5 mb-1">Email</label>
-        <input
-          type="email"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={uiRole === "admin" ? "admin@mspixel.plus" : "you@example.com"}
-          required
-          autoComplete="username"
-        />
+        {/* Form */}
+        <form onSubmit={onSubmit} className="px-6 pt-5 pb-6 space-y-4">
+          <label className="block">
+            <div className="text-xs text-white/65 mb-1">Email</div>
+            <input
+              className="w-full rounded-lg bg-black/30 border border-white/15 px-3 py-2 text-white placeholder-white/35 outline-none focus:ring-2 focus:ring-emerald-400/70 focus:border-emerald-400/60"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              inputMode="email"
+            />
+          </label>
 
-        <label className="block text-sm mt-4 mb-1">Password</label>
-        <input
-          type="password"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          required
-          autoComplete="current-password"
-        />
+          <label className="block">
+            <div className="text-xs text-white/65 mb-1">Password</div>
+            <input
+              type="password"
+              className="w-full rounded-lg bg-black/30 border border-white/15 px-3 py-2 text-white placeholder-white/35 outline-none focus:ring-2 focus:ring-emerald-400/70 focus:border-emerald-400/60"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </label>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-6 rounded-lg bg-emerald-500 hover:bg-emerald-600 transition-colors px-4 py-2 font-medium disabled:opacity-60"
-        >
-          {loading ? "Signing in…" : "Login"}
-        </button>
+          {err && <div className="text-sm text-rose-400">{err}</div>}
 
-        <p className="text-xs text-white/50 mt-4">
-          The role toggle is a UI hint. Your access is decided by your account’s role on the server.
-        </p>
-      </form>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium
+                         bg-emerald-500 text-black shadow-sm transition
+                         hover:bg-emerald-600 active:translate-y-[1px]
+                         focus:outline-none focus:ring-2 focus:ring-emerald-400/70
+                         disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? "Logging in…" : "Login"}
+            </button>
+
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="text-sm underline underline-offset-2 opacity-90 hover:opacity-100"
+            >
+              Use test creds
+            </button>
+          </div>
+
+          {/* Helper */}
+          <div className="pt-3 text-xs text-white/60 space-y-1">
+            <p>
+              <b>Tip:</b> The role toggle is a UI hint. Your access is decided by your
+              account’s role on the server.
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
