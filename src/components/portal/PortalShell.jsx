@@ -1,8 +1,9 @@
-import { NavLink, Link } from "react-router-dom";
+// src/components/portal/PortalShell.jsx
+import { NavLink } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
 export default function PortalShell({ children }) {
-  const { role, user, logout } = useAuth();
+  const { role } = useAuth();
 
   const navs = {
     admin: [
@@ -33,6 +34,7 @@ export default function PortalShell({ children }) {
 
   return (
     <div className="container-edge grid grid-cols-12 gap-6 py-6">
+      {/* Sidebar */}
       <aside className="col-span-12 md:col-span-3 lg:col-span-2">
         <div className="card-surface p-4">
           <div className="font-black text-lg">MSPixelPlus</div>
@@ -47,17 +49,8 @@ export default function PortalShell({ children }) {
         </nav>
       </aside>
 
+      {/* Main Content */}
       <section className="col-span-12 md:col-span-9 lg:col-span-10">
-        <div className="card-surface p-4 mb-4 flex items-center justify-between">
-          <div className="text-sm">
-            <span className="text-white/70">{user?.name}</span>{" "}
-            <span className="text-white/40">· {user?.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/" className="btn btn-outline h-9">Public Site</Link>
-            <button onClick={logout} className="btn btn-primary h-9">Logout</button>
-          </div>
-        </div>
         {children}
       </section>
     </div>

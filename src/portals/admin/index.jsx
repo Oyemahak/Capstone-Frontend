@@ -1,43 +1,40 @@
 // src/portals/admin/index.jsx
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import PortalShell from "@/components/portal/PortalShell.jsx";
+
 import AdminDashboard from "./AdminDashboard.jsx";
 import Users from "./Users.jsx";
 import UserDetail from "./UserDetail.jsx";
-import Approvals from "./Approvals.jsx";
+import CreateUser from "./CreateUser.jsx";
 import Projects from "./Projects.jsx";
 import ProjectDetail from "./ProjectDetail.jsx";
+import Approvals from "./Approvals.jsx";
 import Settings from "./Settings.jsx";
-import CreateUser from "./CreateUser.jsx";
 
 export default function AdminPortal() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 space-y-6">
-      <nav className="flex gap-3 text-sm">
-        {[
-          ["Dashboard", "/admin"],
-          ["Users", "/admin/users"],
-          ["Approvals", "/admin/approvals"],
-          ["Projects", "/admin/projects"],
-          ["Create User", "/admin/create-user"],
-          ["Settings", "/admin/settings"],
-        ].map(([label, href]) => (
-          <NavLink key={href} to={href} className={({isActive}) =>
-            `px-3 py-1 rounded ${isActive ? "bg-brand text-black" : "bg-white/10"}`
-          }>{label}</NavLink>
-        ))}
-      </nav>
-
+    <PortalShell title="Admin Portal" items={[
+      { to: "/admin/dashboard", label: "Dashboard" },
+      { to: "/admin/approvals", label: "Approvals" },
+      { to: "/admin/users",     label: "Users" },
+      { to: "/admin/projects",  label: "Projects" },
+      { to: "/admin/settings",  label: "Settings" },
+    ]}>
       <Routes>
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<Users />} />
-        <Route path="users/:id" element={<UserDetail />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="approvals" element={<Approvals />} />
+
+        <Route path="users" element={<Users />} />
+        <Route path="users/new" element={<CreateUser />} />
+        <Route path="users/:userId" element={<UserDetail />} />
+
         <Route path="projects" element={<Projects />} />
-        <Route path="projects/:id" element={<ProjectDetail />} />
-        <Route path="create-user" element={<CreateUser />} />
+        <Route path="projects/:projectId" element={<ProjectDetail />} />
+
         <Route path="settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
-    </div>
+    </PortalShell>
   );
 }
