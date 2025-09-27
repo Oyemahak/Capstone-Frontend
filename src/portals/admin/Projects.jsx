@@ -1,16 +1,9 @@
 // src/portals/admin/Projects.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { admin, projects as api } from "@/lib/api.js";
+import { Pencil, Trash2, X, Plus, Wand2 } from "lucide-react";
 
-/**
- * Admin > Projects
- * - Read: list + filters
- * - Create: inline form at top
- * - Update: inline editor per row (title, summary, status, client, dev)
- * - Delete: per row
- * - Seed demo: adds your example projects (mostly "completed")
- */
 export default function Projects() {
   // data
   const [projects, setProjects] = useState([]);
@@ -229,38 +222,18 @@ export default function Projects() {
   async function seedDemo() {
     setErr("");
     try {
-      // If a client named "Sukhdeep" exists, link to Aimze Studio
       const c = users.find(
         (x) => x.role === "client" && /sukhdeep/i.test(x.name || "")
       );
 
       const demo = [
-        {
-          title: "CanSTEM Education (Private School)",
-          summary: "WordPress site for a private STEM school.",
-          status: "completed",
-        },
-        {
-          title: "Aimze Studio — Salon & Spa",
-          summary: "WordPress salon site with services & bookings.",
-          status: "completed",
-          client: c?._id || null,
-        },
-        {
-          title: "MahakPatel.com",
-          summary: "Personal portfolio built in React.",
-          status: "completed",
-        },
-        {
-          title: "Portfolio (Wix)",
-          summary: "Alternate portfolio built using Wix.",
-          status: "completed",
-        },
+        { title: "CanSTEM Education (Private School)", summary: "WordPress site for a private STEM school.", status: "completed" },
+        { title: "Aimze Studio — Salon & Spa", summary: "WordPress salon site with services & bookings.", status: "completed", client: c?._id || null },
+        { title: "MahakPatel.com", summary: "Personal portfolio built in React.", status: "completed" },
+        { title: "Portfolio (Wix)", summary: "Alternate portfolio built using Wix.", status: "completed" },
       ];
 
-      for (const d of demo) {
-        await api.create(d);
-      }
+      for (const d of demo) await api.create(d);
       await load();
       alert("Demo projects added.");
     } catch (e) {
@@ -268,60 +241,35 @@ export default function Projects() {
     }
   }
 
+  /* ---------------- UI ---------------- */
   return (
-    <div className="page-shell">
+    <div className="page-shell space-y-5">
+      {/* Page title */}
       <div className="page-header">
         <h2 className="page-title">Projects</h2>
-        <div className="flex gap-2">
-          <button className="btn btn-outline" onClick={seedDemo}>
-            Seed demo
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowNew((v) => !v)}
-          >
-            {showNew ? "Close" : "New project"}
-          </button>
-        </div>
+        <div />
       </div>
 
-      {/* Create form */}
+      {/* Create form (collapsible) */}
       {showNew && (
-        <form
-          onSubmit={onCreate}
-          className="card-surface p-6 mb-5 grid md:grid-cols-2 gap-4"
-        >
+        <form onSubmit={onCreate} className="card-surface p-6 grid md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Title</div>
-              <input
-                className="form-input"
-                value={form.title}
-                onChange={(e) => setF("title", e.target.value)}
-                required
-              />
+              <input className="form-input" value={form.title} onChange={(e) => setF("title", e.target.value)} required />
             </label>
           </div>
 
           <div className="md:col-span-2">
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Summary</div>
-              <textarea
-                className="form-input"
-                rows={3}
-                value={form.summary}
-                onChange={(e) => setF("summary", e.target.value)}
-              />
+              <textarea className="form-input" rows={3} value={form.summary} onChange={(e) => setF("summary", e.target.value)} />
             </label>
           </div>
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Status</div>
-            <select
-              className="form-input bg-transparent"
-              value={form.status}
-              onChange={(e) => setF("status", e.target.value)}
-            >
+            <select className="form-input bg-transparent" value={form.status} onChange={(e) => setF("status", e.target.value)}>
               <option value="draft">Draft</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
@@ -330,32 +278,20 @@ export default function Projects() {
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Client</div>
-            <select
-              className="form-input bg-transparent"
-              value={form.client}
-              onChange={(e) => setF("client", e.target.value)}
-            >
+            <select className="form-input bg-transparent" value={form.client} onChange={(e) => setF("client", e.target.value)}>
               <option value="">— Unassigned —</option>
               {clients.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name} — {c.email}
-                </option>
+                <option key={c._id} value={c._id}>{c.name} — {c.email}</option>
               ))}
             </select>
           </label>
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Developer</div>
-            <select
-              className="form-input bg-transparent"
-              value={form.developer}
-              onChange={(e) => setF("developer", e.target.value)}
-            >
+            <select className="form-input bg-transparent" value={form.developer} onChange={(e) => setF("developer", e.target.value)}>
               <option value="">— Unassigned —</option>
               {devs.map((d) => (
-                <option key={d._id} value={d._id}>
-                  {d.name} — {d.email}
-                </option>
+                <option key={d._id} value={d._id}>{d.name} — {d.email}</option>
               ))}
             </select>
           </label>
@@ -367,7 +303,7 @@ export default function Projects() {
       )}
 
       {/* Filters */}
-      <div className="card-surface p-4 mb-4 grid md:grid-cols-[1fr_200px] gap-3">
+      <div className="card-surface p-4 grid md:grid-cols-[1fr_200px] gap-3">
         <input
           className="form-input"
           placeholder="Search title/summary…"
@@ -386,29 +322,30 @@ export default function Projects() {
         </select>
       </div>
 
-      {err && <div className="mb-3 text-rose-400 text-sm">{err}</div>}
+      {err && <div className="text-rose-400 text-sm">{err}</div>}
 
       {/* List */}
       <div className="card-surface overflow-hidden">
         <table className="table">
           <thead>
             <tr>
-              <th className="w-[38%]">Name</th>
-              <th className="w-[22%]">Client</th>
-              <th className="w-[22%]">Developer</th>
-              <th className="w-[18%]">Status / Actions</th>
+              <th className="w-[42%]">Name</th>
+              <th className="w-[24%]">Client</th>
+              <th className="w-[24%]">Developer</th>
+              <th className="w-[10%] text-right pr-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p) => (
-              <>
-                <tr key={p._id} className="hover:bg-white/5">
+              <Fragment key={p._id}>
+                <tr className="table-row-hover">
                   <td>
-                    <Link to={`/admin/projects/${p._id}`} className="underline">
+                    {/* clean title, no underline; still clickable */}
+                    <Link to={`/admin/projects/${p._id}`} className="font-medium hover:text-primary">
                       {p.title}
                     </Link>
                     {p.summary && (
-                      <div className="text-xs text-white/60 mt-0.5 line-clamp-1">
+                      <div className="text-xs text-white/60 mt-0.5 leading-5 line-clamp-1">
                         {p.summary}
                       </div>
                     )}
@@ -416,35 +353,51 @@ export default function Projects() {
                   <td className="text-white/80">{p.client?.name || "—"}</td>
                   <td className="text-white/80">{p.developer?.name || "—"}</td>
                   <td className="whitespace-nowrap pr-4">
-                    <span className="badge mr-3">{p.status}</span>
+                    <span className="badge mr-2 capitalize">{p.status}</span>
                     <button
-                      className="underline mr-3"
+                      className="icon-btn mr-1"
+                      title={openEditId === p._id ? "Close editor" : "Edit inline"}
                       onClick={() => setOpenEditId((v) => (v === p._id ? null : p._id))}
                     >
-                      {openEditId === p._id ? "Close" : "Edit"}
+                      {openEditId === p._id ? <X size={16} /> : <Pencil size={16} />}
                     </button>
                     <button
-                      className="underline text-rose-300"
+                      className="icon-btn text-rose-300"
+                      title="Delete"
                       disabled={busyId === p._id}
                       onClick={() => onDelete(p._id)}
                     >
-                      Delete
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
 
-                {openEditId === p._id && <EditorRow key={`${p._id}-edit`} p={p} />}
-              </>
+                {openEditId === p._id && <EditorRow p={p} />}
+              </Fragment>
             ))}
             {!filtered.length && (
               <tr>
-                <td colSpan="4" className="text-white/70 py-6 px-4">
+                <td colSpan="4" className="text-white/70 py-6 px-5">
                   {loading ? "Loading…" : "No projects yet."}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Bottom toolbar */}
+      <div className="flex items-center justify-end gap-2 pt-2">
+        <button className="btn btn-outline" onClick={seedDemo} title="Seed demo projects">
+          <Wand2 className="mr-2" size={16} /> Seed demo
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowNew((v) => !v)}
+          title="Create a new project"
+        >
+          <Plus className="mr-2" size={16} /> {showNew ? "Close form" : "New project"}
+        </button>
       </div>
     </div>
   );

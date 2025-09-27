@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { admin } from "@/lib/api.js";
+import { Pencil, Trash2, Check, Plus } from "lucide-react";
 
 export default function Users() {
   const nav = useNavigate();
@@ -36,46 +37,69 @@ export default function Users() {
       <div className="card-surface overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="font-semibold">{title}</div>
-          <div className="text-xs text-white/60">{items.length} user{items.length !== 1 ? "s" : ""}</div>
+          <div className="text-xs text-white/60">
+            {items.length} user{items.length !== 1 ? "s" : ""}
+          </div>
         </div>
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th><th>Email</th><th>Status</th><th className="text-right pr-6">Actions</th>
+              <th className="w-[34%]">Name</th>
+              <th className="w-[34%]">Email</th>
+              <th className="w-[20%]">Status</th>
+              <th className="w-[12%] text-right pr-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {items.map((u) => (
-              <tr key={u._id} className="hover:bg-white/5">
-                <td>{u.name || "—"}</td>
+              <tr key={u._id} className="table-row-hover">
+                <td className="font-medium">{u.name || "—"}</td>
                 <td className="text-white/80">{u.email}</td>
-                <td className="capitalize">{u.status}</td>
-                <td className="text-right whitespace-nowrap pr-6 space-x-3">
-                  <Link to={`/admin/users/${u._id}`} className="underline">Open</Link>
+                <td className="capitalize">
+                  <span className="badge">{u.status}</span>
+                </td>
+                <td className="text-right whitespace-nowrap pr-4">
+                  {/* Edit (opens detail) */}
+                  <Link
+                    to={`/admin/users/${u._id}`}
+                    className="icon-btn mr-1"
+                    title="Open / Edit"
+                  >
+                    <Pencil size={16} />
+                  </Link>
+
+                  {/* Approve (only when not active) */}
                   {u.status !== "active" && (
                     <button
-                      className="underline"
+                      className="icon-btn mr-1"
                       onClick={async () => { await admin.approveUser(u._id); load(); }}
-                      title="Approve (sets status to active)"
+                      title="Approve"
                     >
-                      Approve
+                      <Check size={16} />
                     </button>
                   )}
+
+                  {/* Delete */}
                   <button
-                    className="underline text-rose-300"
+                    className="icon-btn text-rose-300"
                     onClick={async () => {
                       if (!confirm("Delete user?")) return;
                       await admin.deleteUser(u._id);
                       load();
                     }}
+                    title="Delete"
                   >
-                    Delete
+                    <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
             ))}
             {!items.length && (
-              <tr><td colSpan="4" className="text-white/70 px-4 py-6">No users in this group.</td></tr>
+              <tr>
+                <td colSpan="4" className="text-white/70 px-5 py-6">
+                  No users in this group.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -85,13 +109,13 @@ export default function Users() {
 
   return (
     <div className="page-shell space-y-5">
+      {/* Page title only */}
       <div className="page-header">
         <h2 className="page-title">Users</h2>
-        <button onClick={() => nav("/admin/users/new")} className="btn btn-primary h-10">
-          New user
-        </button>
+        <div />
       </div>
 
+      {/* Search */}
       <div className="card-surface p-3 grid md:grid-cols-[1fr_auto] gap-2">
         <input
           className="form-input"
@@ -106,10 +130,22 @@ export default function Users() {
 
       {err && <div className="text-sm text-rose-400">{err}</div>}
 
+      {/* Groups */}
       <div className="grid gap-5">
         <Section title="Admins" items={grouped.admin} />
         <Section title="Developers" items={grouped.developer} />
         <Section title="Clients" items={grouped.client} />
+      </div>
+
+      {/* Bottom toolbar */}
+      <div className="flex items-center justify-end pt-1">
+        <button
+          onClick={() => nav("/admin/users/new")}
+          className="btn btn-primary"
+          title="Create a new user"
+        >
+          <Plus className="mr-2" size={16} /> New user
+        </button>
       </div>
     </div>
   );

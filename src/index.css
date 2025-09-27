@@ -53,6 +53,28 @@ body {
   .page-shell { @apply px-4 pb-12; }
   .page-header { @apply flex items-center justify-between mb-4; }
   .page-title  { @apply text-xl font-extrabold; }
+
+  .table {
+    @apply w-full text-sm;
+  }
+  .table thead th {
+    @apply text-left text-xs font-semibold tracking-wide uppercase
+           text-white/60 py-3 px-5;
+  }
+  .table tbody tr {
+    @apply border-t border-white/5;
+  }
+  .table tbody td {
+    @apply py-3 px-5 align-middle;
+  }
+  .table-row-hover:hover {
+    @apply bg-white/5;
+  }
+
+  /* compact, consistent icon button */
+  .icon-btn {
+    @apply h-8 w-8 inline-grid place-items-center rounded-lg hover:bg-white/10;
+  }
 }
 
 /* Forms */
