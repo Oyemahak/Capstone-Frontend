@@ -7,14 +7,17 @@ export default function Settings() {
   const nav = useNavigate();
   const { user, logout } = useAuth();
 
-  async function doLogout(){
-    try { await logout(); } catch {}
-    nav("/", { replace:true });
+  async function doLogout() {
+    try { await logout(); } catch { }
+    nav("/", { replace: true });
   }
 
   return (
-    <div className="px-4 pb-10">
-      <h2 className="text-xl font-extrabold mb-4">Settings</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">Settings</h2>
+        <div />
+      </div>
 
       <div className="card-surface p-6 max-w-xl space-y-3">
         <div className="text-sm">Logged in as <b>{user?.email}</b></div>

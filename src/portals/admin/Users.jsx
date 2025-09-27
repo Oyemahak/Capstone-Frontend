@@ -84,9 +84,9 @@ export default function Users() {
   }
 
   return (
-    <div className="px-4 pb-14 space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-extrabold">Users</h2>
+    <div className="page-shell space-y-5">
+      <div className="page-header">
+        <h2 className="page-title">Users</h2>
         <button onClick={() => nav("/admin/users/new")} className="btn btn-primary h-10">
           New user
         </button>

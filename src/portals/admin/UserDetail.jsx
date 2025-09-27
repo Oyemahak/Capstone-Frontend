@@ -45,8 +45,10 @@ export default function UserDetail() {
   const protectDelete = user.email === SUPER_EMAIL || user.isSuperAdmin;
 
   return (
-    <div className="px-4 pb-10">
-      <h2 className="text-xl font-extrabold mb-4">User detail</h2>
+    <div className="page-shell space-y-5">
+      <div className="page-header">
+        <h2 className="page-title">User Detail</h2>
+        </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="card-surface p-6 space-y-4">

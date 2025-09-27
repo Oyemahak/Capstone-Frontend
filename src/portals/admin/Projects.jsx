@@ -269,10 +269,9 @@ export default function Projects() {
   }
 
   return (
-    <div className="px-4 pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-extrabold">Projects</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">Projects</h2>
         <div className="flex gap-2">
           <button className="btn btn-outline" onClick={seedDemo}>
             Seed demo

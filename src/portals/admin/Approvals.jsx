@@ -46,8 +46,11 @@ export default function Approvals() {
   }
 
   return (
-    <div className="px-4 pb-12">
-      <h2 className="text-xl font-extrabold mb-4">Pending Approvals</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">Pending Approvals</h2>
+        <div />
+      </div>
       {err && <div className="mb-3 text-rose-400 text-sm">{err}</div>}
 
       <div className="card-surface overflow-hidden">

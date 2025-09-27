@@ -25,8 +25,11 @@ export default function CreateUser() {
   }
 
   return (
-    <div className="px-4 pb-10">
-      <h2 className="text-xl font-extrabold mb-4">Create user</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">Create User</h2>
+        <div />
+      </div>
       <form onSubmit={submit} className="card-surface p-6 max-w-xl space-y-4">
         {err && <div className="text-sm text-rose-400">{err}</div>}
         {ok && <div className="text-sm text-emerald-400">{ok}</div>}

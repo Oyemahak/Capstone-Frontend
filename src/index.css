@@ -49,6 +49,12 @@ body {
   @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
 }
 
+@layer components {
+  .page-shell { @apply px-4 pb-12; }
+  .page-header { @apply flex items-center justify-between mb-4; }
+  .page-title  { @apply text-xl font-extrabold; }
+}
+
 /* Forms */
 input,
 select,

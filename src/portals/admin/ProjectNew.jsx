@@ -47,25 +47,27 @@ export default function ProjectNew() {
   }
 
   return (
-    <div className="px-4 pb-10">
-      <h2 className="text-xl font-extrabold mb-4">New project</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">New roject</h2>
+      </div>
 
       <form onSubmit={submit} className="card-surface p-6 max-w-2xl space-y-4">
         {err && <div className="text-rose-400 text-sm">{err}</div>}
 
         <label className="block">
           <div className="text-xs text-white/65 mb-1">Title</div>
-          <input className="form-input" value={form.title} onChange={e=>set("title", e.target.value)} required />
+          <input className="form-input" value={form.title} onChange={e => set("title", e.target.value)} required />
         </label>
         <label className="block">
           <div className="text-xs text-white/65 mb-1">Summary</div>
-          <textarea className="form-input" rows={4} value={form.summary} onChange={e=>set("summary", e.target.value)} />
+          <textarea className="form-input" rows={4} value={form.summary} onChange={e => set("summary", e.target.value)} />
         </label>
 
         <div className="grid md:grid-cols-3 gap-3">
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Status</div>
-            <select className="form-input bg-transparent" value={form.status} onChange={e=>set("status", e.target.value)}>
+            <select className="form-input bg-transparent" value={form.status} onChange={e => set("status", e.target.value)}>
               <option value="draft">Draft</option>
               <option value="active">In progress</option>
               <option value="completed">Completed</option>
@@ -73,14 +75,14 @@ export default function ProjectNew() {
           </label>
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Client</div>
-            <select className="form-input bg-transparent" value={form.client} onChange={e=>set("client", e.target.value)}>
+            <select className="form-input bg-transparent" value={form.client} onChange={e => set("client", e.target.value)}>
               <option value="">— Unassigned —</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.name} — {c.email}</option>)}
             </select>
           </label>
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Developer</div>
-            <select className="form-input bg-transparent" value={form.developer} onChange={e=>set("developer", e.target.value)}>
+            <select className="form-input bg-transparent" value={form.developer} onChange={e => set("developer", e.target.value)}>
               <option value="">— Unassigned —</option>
               {devs.map(d => <option key={d._id} value={d._id}>{d.name} — {d.email}</option>)}
             </select>

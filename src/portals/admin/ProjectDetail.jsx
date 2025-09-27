@@ -15,7 +15,7 @@ export default function ProjectDetail() {
     let live = true;
     (async () => {
       try {
-        const [p, u] = await Promise.all([ api.one(projectId), admin.users() ]);
+        const [p, u] = await Promise.all([api.one(projectId), admin.users()]);
         if (!live) return;
         setProject(p.project || p);
         setUsers(u.users || []);
@@ -25,23 +25,23 @@ export default function ProjectDetail() {
   }, [projectId]);
 
   const clients = useMemo(() => users.filter(u => u.role === "client"), [users]);
-  const devs    = useMemo(() => users.filter(u => u.role === "developer"), [users]);
+  const devs = useMemo(() => users.filter(u => u.role === "developer"), [users]);
 
-  async function patch(body){
+  async function patch(body) {
     try {
       const d = await api.update(projectId, body);
       setProject(d.project || d);
       setOk("Saved");
-      setTimeout(()=>setOk(""), 1200);
-    } catch(e){ setErr(e.message); }
+      setTimeout(() => setOk(""), 1200);
+    } catch (e) { setErr(e.message); }
   }
 
-  async function remove(){
+  async function remove() {
     if (!confirm("Delete this project?")) return;
     try {
       await api.remove(projectId);
-      nav("/admin/projects", { replace:true });
-    } catch(e){ setErr(e.message); }
+      nav("/admin/projects", { replace: true });
+    } catch (e) { setErr(e.message); }
   }
 
   if (!project) {
@@ -49,9 +49,9 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="px-4 pb-10">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-extrabold">Project</h2>
+    <div className="page-shell">
+      <div className="page-header">
+        <h2 className="page-title">Project</h2>
         <button onClick={remove} className="btn btn-outline">Delete</button>
       </div>
 
@@ -65,8 +65,8 @@ export default function ProjectDetail() {
             <input
               className="form-input"
               value={project.title || ""}
-              onChange={(e)=>setProject(p=>({ ...p, title: e.target.value }))}
-              onBlur={()=>patch({ title: (project.title || "").trim() })}
+              onChange={(e) => setProject(p => ({ ...p, title: e.target.value }))}
+              onBlur={() => patch({ title: (project.title || "").trim() })}
             />
           </label>
 
@@ -75,8 +75,8 @@ export default function ProjectDetail() {
             <textarea
               className="form-input" rows={4}
               value={project.summary || ""}
-              onChange={(e)=>setProject(p=>({ ...p, summary: e.target.value }))}
-              onBlur={()=>patch({ summary: (project.summary || "").trim() })}
+              onChange={(e) => setProject(p => ({ ...p, summary: e.target.value }))}
+              onBlur={() => patch({ summary: (project.summary || "").trim() })}
             />
           </label>
 
@@ -85,7 +85,7 @@ export default function ProjectDetail() {
             <select
               className="form-input bg-transparent"
               value={project.status || "draft"}
-              onChange={(e)=>patch({ status: e.target.value })}
+              onChange={(e) => patch({ status: e.target.value })}
             >
               <option value="draft">Draft</option>
               <option value="active">Active</option>
@@ -100,7 +100,7 @@ export default function ProjectDetail() {
             <select
               className="form-input bg-transparent"
               value={project.client?._id || ""}
-              onChange={(e)=>patch({ client: e.target.value || null })}
+              onChange={(e) => patch({ client: e.target.value || null })}
             >
               <option value="">— Unassigned —</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.name} — {c.email}</option>)}
@@ -112,7 +112,7 @@ export default function ProjectDetail() {
             <select
               className="form-input bg-transparent"
               value={project.developer?._id || ""}
-              onChange={(e)=>patch({ developer: e.target.value || null })}
+              onChange={(e) => patch({ developer: e.target.value || null })}
             >
               <option value="">— Unassigned —</option>
               {devs.map(d => <option key={d._id} value={d._id}>{d.name} — {d.email}</option>)}
