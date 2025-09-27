@@ -1,10 +1,7 @@
 // src/portals/admin/UserDetail.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { API_BASE } from "@/lib/api.js";
-
-async function apiGet(path){ const r=await fetch(`${API_BASE}${path}`,{credentials:"include"}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d?.message||`HTTP ${r.status}`); return d;}
-async function apiJson(path, method, body){ const r=await fetch(`${API_BASE}${path}`,{method,credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d?.message||`HTTP ${r.status}`); return d;}
+import { admin } from "@/lib/api.js";
 
 const SUPER_EMAIL = "admin@mspixel.plus"; // UI safety; backend should also protect
 
@@ -16,22 +13,22 @@ export default function UserDetail() {
   const [ok, setOk] = useState("");
 
   async function load(){
-    try { const d = await apiGet(`/admin/users/${userId}`); setUser(d.user); setErr(""); }
+    try { const d = await admin.user(userId); setUser(d.user || d); setErr(""); }
     catch(e){ setErr(e.message); }
   }
   useEffect(() => { load(); }, [userId]);
 
   async function patch(next){
     try {
-      const d = await apiJson(`/admin/users/${userId}`, "PATCH", next);
-      setUser(d.user); setOk("Saved"); setTimeout(()=>setOk(""), 1200);
+      const d = await admin.updateUser(userId, next);
+      setUser(d.user || d); setOk("Saved"); setTimeout(()=>setOk(""), 1200);
     } catch(e){ setErr(e.message); }
   }
 
   async function remove(){
     if (!confirm("Delete this user?")) return;
     try {
-      await fetch(`${API_BASE}/admin/users/${userId}`, { method:"DELETE", credentials:"include" });
+      await admin.deleteUser(userId);
       nav("/admin/users", { replace:true });
     } catch(e){ setErr(e.message); }
   }

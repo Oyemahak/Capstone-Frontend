@@ -1,3 +1,4 @@
+//app.jsx
 import React, { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import AppHeader from "./components/layout/AppHeader.jsx";
@@ -12,6 +13,7 @@ const Services      = lazy(() => import("./pages/Services.jsx"));
 const Pricing       = lazy(() => import("./pages/Pricing.jsx"));
 const Contact       = lazy(() => import("./pages/Contact.jsx"));
 const Login         = lazy(() => import("./pages/auth/Login.jsx"));
+const Register      = lazy(() => import("./pages/auth/Register.jsx"));
 
 /** Portals */
 const AdminPortal  = lazy(() => import("@/portals/admin/index.jsx"));
@@ -75,6 +77,7 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/debug" element={<DebugConnection />} />
 
             {/* Admin */}

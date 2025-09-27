@@ -1,42 +1,60 @@
 // src/portals/admin/ProjectDetail.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { API_BASE } from "@/lib/api.js";
-
-async function apiGet(path){ const r=await fetch(`${API_BASE}${path}`,{credentials:"include"}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d?.message||`HTTP ${r.status}`); return d;}
-async function apiJson(path, method, body){ const r=await fetch(`${API_BASE}${path}`,{method,credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d?.message||`HTTP ${r.status}`); return d;}
+import { useNavigate, useParams } from "react-router-dom";
+import { admin, projects as api } from "@/lib/api.js";
 
 export default function ProjectDetail() {
   const { projectId } = useParams();
+  const nav = useNavigate();
+
   const [project, setProject] = useState(null);
   const [users, setUsers] = useState([]);
-  const [ok, setOk] = useState(""); const [err, setErr] = useState("");
+  const [ok, setOk] = useState("");
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     let live = true;
     (async () => {
       try {
-        const [p, u] = await Promise.all([ apiGet(`/projects/${projectId}`), apiGet("/admin/users") ]);
+        const [p, u] = await Promise.all([ api.one(projectId), admin.users() ]);
         if (!live) return;
-        setProject(p.project); setUsers(u.users||[]);
-      } catch (e){ if (live) setErr(e.message); }
+        setProject((p.project || p));
+        setUsers(u.users || []);
+      } catch (e) { if (live) setErr(e.message); }
     })();
-    return () => (live=false);
+    return () => { live = false; };
   }, [projectId]);
 
-  const clients = useMemo(() => users.filter(u=>u.role==="client"), [users]);
-  const devs    = useMemo(() => users.filter(u=>u.role==="developer"), [users]);
+  const clients = useMemo(() => users.filter(u => u.role === "client"), [users]);
+  const devs    = useMemo(() => users.filter(u => u.role === "developer"), [users]);
 
   async function patch(body){
-    try { const d = await apiJson(`/projects/${projectId}`, "PATCH", body); setProject(d.project); setOk("Saved"); setTimeout(()=>setOk(""), 1200);}
-    catch(e){ setErr(e.message); }
+    try {
+      const d = await api.update(projectId, body);
+      setProject(d.project || d);
+      setOk("Saved");
+      setTimeout(()=>setOk(""), 1200);
+    } catch(e){ setErr(e.message); }
   }
 
-  if (!project) return <div className="px-4 pb-10">{err ? <div className="text-rose-400">{err}</div> : "Loading…"}</div>;
+  async function remove(){
+    if (!confirm("Delete this project?")) return;
+    try {
+      await api.remove(projectId);
+      nav("/admin/projects", { replace:true });
+    } catch(e){ setErr(e.message); }
+  }
+
+  if (!project) {
+    return <div className="px-4 pb-10">{err ? <div className="text-rose-400">{err}</div> : "Loading…"}</div>;
+  }
 
   return (
     <div className="px-4 pb-10">
-      <h2 className="text-xl font-extrabold mb-4">Project</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-extrabold">Project</h2>
+        <button onClick={remove} className="btn btn-outline">Delete</button>
+      </div>
 
       {ok && <div className="text-emerald-400 text-sm mb-3">{ok}</div>}
       {err && <div className="text-rose-400 text-sm mb-3">{err}</div>}
@@ -45,7 +63,8 @@ export default function ProjectDetail() {
         <div className="card-surface p-6 space-y-4">
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Title</div>
-            <input className="form-input"
+            <input
+              className="form-input"
               value={project.title || ""}
               onChange={(e)=>setProject(p=>({ ...p, title: e.target.value }))}
               onBlur={()=>patch({ title: project.title })}
@@ -54,7 +73,8 @@ export default function ProjectDetail() {
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Summary</div>
-            <textarea rows={4} className="form-input"
+            <textarea
+              className="form-input" rows={4}
               value={project.summary || ""}
               onChange={(e)=>setProject(p=>({ ...p, summary: e.target.value }))}
               onBlur={()=>patch({ summary: project.summary })}
@@ -63,7 +83,8 @@ export default function ProjectDetail() {
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Status</div>
-            <select className="form-input bg-transparent"
+            <select
+              className="form-input bg-transparent"
               value={project.status || "draft"}
               onChange={(e)=>patch({ status: e.target.value })}
             >
@@ -77,7 +98,8 @@ export default function ProjectDetail() {
         <div className="card-surface p-6 space-y-4">
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Client</div>
-            <select className="form-input bg-transparent"
+            <select
+              className="form-input bg-transparent"
               value={project.client?._id || ""}
               onChange={(e)=>patch({ client: e.target.value || null })}
             >
@@ -88,7 +110,8 @@ export default function ProjectDetail() {
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Developer</div>
-            <select className="form-input bg-transparent"
+            <select
+              className="form-input bg-transparent"
               value={project.developer?._id || ""}
               onChange={(e)=>patch({ developer: e.target.value || null })}
             >

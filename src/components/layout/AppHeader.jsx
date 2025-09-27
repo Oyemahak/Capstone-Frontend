@@ -1,3 +1,4 @@
+// src/components/layout/AppHeader.jsx
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
@@ -17,10 +18,7 @@ export default function AppHeader() {
   }
 
   const linkClass = ({ isActive }) =>
-    [
-      "px-3 py-2 rounded-lg text-sm font-semibold",
-      isActive ? "bg-white/10" : "hover:bg-white/5",
-    ].join(" ");
+    ["px-3 py-2 rounded-lg text-sm font-semibold", isActive ? "bg-white/10" : "hover:bg-white/5"].join(" ");
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 backdrop-blur bg-black/40 border-b border-white/10">
@@ -38,12 +36,16 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           {!isAuthed ? (
             <>
+              <NavLink to="/register" className={({ isActive }) =>
+                ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
+                 isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
+              }>Register</NavLink>
+
               <NavLink to="/login" className={({ isActive }) =>
                 ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
                  isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
-              }>
-                Login
-              </NavLink>
+              }>Login</NavLink>
+
               <Link to="/contact" className="btn btn-primary h-10">Start Project</Link>
             </>
           ) : (
