@@ -74,7 +74,7 @@ export default function Register() {
             <div className="text-xs text-white/65 mb-1">Full name</div>
             <input
               className="w-full rounded-lg bg-black/30 border border-white/15 px-3 py-2 text-white placeholder-white/35 outline-none focus:ring-2 focus:ring-emerald-400/70 focus:border-emerald-400/60"
-              placeholder="Jane Smith"
+              placeholder="First Last"
               value={form.name}
               onChange={change("name")}
               autoComplete="name"
@@ -122,7 +122,7 @@ export default function Register() {
             </button>
 
             <Link to="/login" className="text-sm underline underline-offset-2 opacity-90 hover:opacity-100">
-              Already have an account? Sign in
+              Already have an account? Login
             </Link>
           </div>
         </form>

@@ -58,7 +58,7 @@ export default function Login() {
       <div className="max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/30 backdrop-blur-md">
         {/* Header */}
         <div className="px-6 pt-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome Back 👋</h1>
           <p className="text-sm text-white/60 mt-1">
             Choose your role, then enter your credentials.
           </p>
