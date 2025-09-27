@@ -2,6 +2,7 @@
 export const API_BASE =
   (import.meta.env.VITE_API_BASE?.replace(/\/$/, "") || "http://localhost:4000/api");
 
+/** Read token saved by AuthContext/Login */
 function getToken() {
   try {
     const raw = localStorage.getItem("auth");
@@ -37,19 +38,21 @@ async function http(path, { method = "GET", body, headers } = {}) {
   return data;
 }
 
+/* ---------- High-level helpers ---------- */
 export const auth = {
   login: (email, password) =>
     http("/auth/login", { method: "POST", body: { email, password } }),
   logout: () => http("/auth/logout", { method: "POST" }),
   me: () => http("/auth/me"),
 
+  // Try /auth/register then fall back to /register if old backend
   register: async (payload) => {
-    // Primary: new endpoint
     try {
       return await http("/auth/register", { method: "POST", body: payload });
     } catch (e) {
-      // Fallback if someone runs an older backend
-      if (e?.status === 404) return http("/register", { method: "POST", body: payload });
+      if (e?.status === 404) {
+        return http("/register", { method: "POST", body: payload });
+      }
       throw e;
     }
   },
@@ -62,11 +65,12 @@ export const admin = {
   updateUser: (id, payload) => http(`/admin/users/${id}`, { method: "PATCH", body: payload }),
   deleteUser: (id) => http(`/admin/users/${id}`, { method: "DELETE" }),
 
-  // Pending from query keeps compatibility
   pending: () => http("/admin/users?status=pending"),
 
-  approveUser: (id) => http(`/admin/users/${id}/approve`, { method: "POST" }),
-  rejectUser: (id) => http(`/admin/users/${id}/reject`, { method: "POST" }),
+  // IMPORTANT: backend expects PATCH
+  approveUser: (id) => http(`/admin/users/${id}/approve`, { method: "PATCH" }),
+  rejectUser: (id) => http(`/admin/users/${id}/reject`, { method: "PATCH" }),
+
   stats: () => http("/admin/stats"),
 };
 
@@ -78,7 +82,6 @@ export const projects = {
   remove: (id) => http(`/projects/${id}`, { method: "DELETE" }),
 };
 
-// Keep this so <Projects/> can call Seed/Reset without import error
 export const debug = {
   seedBasic: () => http("/debug/seed-basic", { method: "POST" }),
   resetBasic: () => http("/debug/reset-basic", { method: "POST" }),

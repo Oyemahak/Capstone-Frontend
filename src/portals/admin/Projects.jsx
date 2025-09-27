@@ -3,16 +3,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { admin, projects as api } from "@/lib/api.js";
 
+/**
+ * Admin > Projects
+ * - Read: list + filters
+ * - Create: inline form at top
+ * - Update: inline editor per row (title, summary, status, client, dev)
+ * - Delete: per row
+ * - Seed demo: adds your example projects (mostly "completed")
+ */
 export default function Projects() {
-  const [list, setList] = useState([]);
+  // data
+  const [projects, setProjects] = useState([]);
+  const [users, setUsers] = useState([]);
+
+  // filters
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // create form toggle + form data
+  // ui state
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
   const [showNew, setShowNew] = useState(false);
-  const [users, setUsers] = useState([]);
+  const [openEditId, setOpenEditId] = useState(null);
+  const [busyId, setBusyId] = useState(""); // disable row while saving
+
+  // create form
   const [form, setForm] = useState({
     title: "",
     summary: "",
@@ -20,56 +35,51 @@ export default function Projects() {
     client: "",
     developer: "",
   });
+  const setF = (k, v) => setForm((s) => ({ ...s, [k]: v }));
 
-  function setF(k, v) { setForm((s) => ({ ...s, [k]: v })); }
-
+  // load from API
   async function load() {
     setLoading(true);
     setErr("");
     try {
-      const [p, u] = await Promise.all([api.list(), admin.list()]);
-      setList(p.projects || []);
-      const allUsers = Array.isArray(u) ? u : u?.users || [];
-      setUsers(allUsers);
+      const [p, u] = await Promise.all([api.list(), admin.users()]);
+      setProjects(p.projects || []);
+      setUsers(u.users || []);
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "Failed to fetch");
     } finally {
       setLoading(false);
     }
   }
   useEffect(() => { load(); }, []);
 
-  const clients = useMemo(() => users.filter(u => u.role === "client"), [users]);
-  const devs = useMemo(() => users.filter(u => u.role === "developer"), [users]);
+  // helpers
+  const clients = useMemo(() => users.filter((u) => u.role === "client"), [users]);
+  const devs = useMemo(() => users.filter((u) => u.role === "developer"), [users]);
 
+  // search + status filter
   const filtered = useMemo(() => {
-    return (list || []).filter(p => {
-      const m1 = !q || `${p.title} ${p.summary}`.toLowerCase().includes(q.toLowerCase());
+    const needle = q.trim().toLowerCase();
+    return (projects || []).filter((p) => {
+      const m1 = !needle || `${p.title} ${p.summary}`.toLowerCase().includes(needle);
       const m2 = !status || p.status === status;
       return m1 && m2;
     });
-  }, [list, q, status]);
+  }, [projects, q, status]);
 
-  async function createProject(e) {
+  /* ---------------- Create ---------------- */
+  async function onCreate(e) {
     e.preventDefault();
     setErr("");
     try {
-      // Create bare project
-      const created = await api.create({
+      const payload = {
         title: form.title.trim(),
-        summary: form.summary.trim(),
+        summary: (form.summary || "").trim(),
         status: form.status,
-      });
-      const p = created.project || created;
-
-      // Assign client/dev if chosen
-      const updates = {};
-      if (form.client) updates.client = form.client;
-      if (form.developer) updates.developer = form.developer;
-      if (Object.keys(updates).length) {
-        await api.update(p._id, updates);
-      }
-
+        client: form.client || null,
+        developer: form.developer || null,
+      };
+      await api.create(payload);
       setShowNew(false);
       setForm({ title: "", summary: "", status: "draft", client: "", developer: "" });
       await load();
@@ -78,16 +88,153 @@ export default function Projects() {
     }
   }
 
+  /* ---------------- Update (inline editor) ---------------- */
+  function EditorRow({ p }) {
+    const [local, setLocal] = useState({
+      title: p.title || "",
+      summary: p.summary || "",
+      status: p.status || "draft",
+      client: p.client?._id || "",
+      developer: p.developer?._id || "",
+    });
+    const setL = (k, v) => setLocal((s) => ({ ...s, [k]: v }));
+
+    async function save() {
+      setBusyId(p._id);
+      setErr("");
+      try {
+        const patch = {
+          title: local.title.trim(),
+          summary: (local.summary || "").trim(),
+          status: local.status,
+          client: local.client || null,
+          developer: local.developer || null,
+        };
+        await api.update(p._id, patch);
+        setOpenEditId(null);
+        await load();
+      } catch (e) {
+        setErr(e.message);
+      } finally {
+        setBusyId("");
+      }
+    }
+
+    return (
+      <tr className="bg-white/5">
+        <td colSpan={4} className="p-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <label className="block">
+              <div className="text-xs text-white/65 mb-1">Title</div>
+              <input
+                className="form-input"
+                value={local.title}
+                onChange={(e) => setL("title", e.target.value)}
+              />
+            </label>
+
+            <label className="block">
+              <div className="text-xs text-white/65 mb-1">Status</div>
+              <select
+                className="form-input bg-transparent"
+                value={local.status}
+                onChange={(e) => setL("status", e.target.value)}
+              >
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+            </label>
+
+            <label className="block md:col-span-2">
+              <div className="text-xs text-white/65 mb-1">Summary</div>
+              <textarea
+                className="form-input"
+                rows={3}
+                value={local.summary}
+                onChange={(e) => setL("summary", e.target.value)}
+              />
+            </label>
+
+            <label className="block">
+              <div className="text-xs text-white/65 mb-1">Client</div>
+              <select
+                className="form-input bg-transparent"
+                value={local.client}
+                onChange={(e) => setL("client", e.target.value)}
+              >
+                <option value="">— Unassigned —</option>
+                {clients.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name} — {c.email}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <div className="text-xs text-white/65 mb-1">Developer</div>
+              <select
+                className="form-input bg-transparent"
+                value={local.developer}
+                onChange={(e) => setL("developer", e.target.value)}
+              >
+                <option value="">— Unassigned —</option>
+                {devs.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name} — {d.email}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <button
+              className="btn btn-primary"
+              onClick={save}
+              disabled={busyId === p._id}
+            >
+              {busyId === p._id ? "Saving…" : "Save changes"}
+            </button>
+            <button
+              className="btn btn-outline"
+              onClick={() => setOpenEditId(null)}
+              disabled={busyId === p._id}
+            >
+              Cancel
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  /* ---------------- Delete ---------------- */
+  async function onDelete(id) {
+    if (!confirm("Delete this project?")) return;
+    setBusyId(id);
+    setErr("");
+    try {
+      await api.remove(id);
+      await load();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  /* ---------------- Seed demo ---------------- */
   async function seedDemo() {
     setErr("");
     try {
-      // Try to find Sukhdeep (client)
-      const u = await admin.list("?q=sukhdeep");
-      const all = Array.isArray(u) ? u : u?.users || [];
-      const sukh = all.find(x => x.role === "client" && /sukhdeep/i.test(x.name || ""));
+      // If a client named "Sukhdeep" exists, link to Aimze Studio
+      const c = users.find(
+        (x) => x.role === "client" && /sukhdeep/i.test(x.name || "")
+      );
 
-      // Four completed projects
-      const completed = [
+      const demo = [
         {
           title: "CanSTEM Education (Private School)",
           summary: "WordPress site for a private STEM school.",
@@ -96,7 +243,8 @@ export default function Projects() {
         {
           title: "Aimze Studio — Salon & Spa",
           summary: "WordPress salon site with services & bookings.",
-          status: "active", // in progress
+          status: "completed",
+          client: c?._id || null,
         },
         {
           title: "MahakPatel.com",
@@ -110,16 +258,9 @@ export default function Projects() {
         },
       ];
 
-      // Create each; assign Sukhdeep to Aimze when present
-      for (const item of completed) {
-        const created = await api.create(item);
-        const p = created.project || created;
-
-        if (/Aimze Studio/i.test(item.title) && sukh) {
-          await api.update(p._id, { client: sukh._id });
-        }
+      for (const d of demo) {
+        await api.create(d);
       }
-
       await load();
       alert("Demo projects added.");
     } catch (e) {
@@ -129,11 +270,17 @@ export default function Projects() {
 
   return (
     <div className="px-4 pb-10">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-extrabold">Projects</h2>
         <div className="flex gap-2">
-          <button className="btn btn-outline" onClick={seedDemo}>Seed demo</button>
-          <button className="btn btn-primary" onClick={() => setShowNew(v => !v)}>
+          <button className="btn btn-outline" onClick={seedDemo}>
+            Seed demo
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowNew((v) => !v)}
+          >
             {showNew ? "Close" : "New project"}
           </button>
         </div>
@@ -141,24 +288,41 @@ export default function Projects() {
 
       {/* Create form */}
       {showNew && (
-        <form onSubmit={createProject} className="card-surface p-6 mb-5 grid md:grid-cols-2 gap-4">
+        <form
+          onSubmit={onCreate}
+          className="card-surface p-6 mb-5 grid md:grid-cols-2 gap-4"
+        >
           <div className="md:col-span-2">
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Title</div>
-              <input className="form-input" value={form.title} onChange={e=>setF("title", e.target.value)} required />
+              <input
+                className="form-input"
+                value={form.title}
+                onChange={(e) => setF("title", e.target.value)}
+                required
+              />
             </label>
           </div>
 
           <div className="md:col-span-2">
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Summary</div>
-              <textarea className="form-input" rows={3} value={form.summary} onChange={e=>setF("summary", e.target.value)} />
+              <textarea
+                className="form-input"
+                rows={3}
+                value={form.summary}
+                onChange={(e) => setF("summary", e.target.value)}
+              />
             </label>
           </div>
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Status</div>
-            <select className="form-input bg-transparent" value={form.status} onChange={e=>setF("status", e.target.value)}>
+            <select
+              className="form-input bg-transparent"
+              value={form.status}
+              onChange={(e) => setF("status", e.target.value)}
+            >
               <option value="draft">Draft</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
@@ -167,17 +331,33 @@ export default function Projects() {
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Client</div>
-            <select className="form-input bg-transparent" value={form.client} onChange={e=>setF("client", e.target.value)}>
+            <select
+              className="form-input bg-transparent"
+              value={form.client}
+              onChange={(e) => setF("client", e.target.value)}
+            >
               <option value="">— Unassigned —</option>
-              {clients.map(c => <option key={c._id} value={c._id}>{c.name} — {c.email}</option>)}
+              {clients.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} — {c.email}
+                </option>
+              ))}
             </select>
           </label>
 
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Developer</div>
-            <select className="form-input bg-transparent" value={form.developer} onChange={e=>setF("developer", e.target.value)}>
+            <select
+              className="form-input bg-transparent"
+              value={form.developer}
+              onChange={(e) => setF("developer", e.target.value)}
+            >
               <option value="">— Unassigned —</option>
-              {devs.map(d => <option key={d._id} value={d._id}>{d.name} — {d.email}</option>)}
+              {devs.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.name} — {d.email}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -189,8 +369,17 @@ export default function Projects() {
 
       {/* Filters */}
       <div className="card-surface p-4 mb-4 grid md:grid-cols-[1fr_200px] gap-3">
-        <input className="form-input" placeholder="Search title/summary…" value={q} onChange={e=>setQ(e.target.value)} />
-        <select className="form-input bg-transparent" value={status} onChange={e=>setStatus(e.target.value)}>
+        <input
+          className="form-input"
+          placeholder="Search title/summary…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select
+          className="form-input bg-transparent"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
           <option value="">All status</option>
           <option value="draft">Draft</option>
           <option value="active">Active</option>
@@ -205,20 +394,55 @@ export default function Projects() {
         <table className="table">
           <thead>
             <tr>
-              <th>Name</th><th>Client</th><th>Developer</th><th>Status</th>
+              <th className="w-[38%]">Name</th>
+              <th className="w-[22%]">Client</th>
+              <th className="w-[22%]">Developer</th>
+              <th className="w-[18%]">Status / Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map(p => (
-              <tr key={p._id} className="hover:bg-white/5">
-                <td><Link to={`/admin/projects/${p._id}`} className="underline">{p.title}</Link></td>
-                <td className="text-white/80">{p.client?.name || "—"}</td>
-                <td className="text-white/80">{p.developer?.name || "—"}</td>
-                <td><span className="badge">{p.status}</span></td>
-              </tr>
+            {filtered.map((p) => (
+              <>
+                <tr key={p._id} className="hover:bg-white/5">
+                  <td>
+                    <Link to={`/admin/projects/${p._id}`} className="underline">
+                      {p.title}
+                    </Link>
+                    {p.summary && (
+                      <div className="text-xs text-white/60 mt-0.5 line-clamp-1">
+                        {p.summary}
+                      </div>
+                    )}
+                  </td>
+                  <td className="text-white/80">{p.client?.name || "—"}</td>
+                  <td className="text-white/80">{p.developer?.name || "—"}</td>
+                  <td className="whitespace-nowrap pr-4">
+                    <span className="badge mr-3">{p.status}</span>
+                    <button
+                      className="underline mr-3"
+                      onClick={() => setOpenEditId((v) => (v === p._id ? null : p._id))}
+                    >
+                      {openEditId === p._id ? "Close" : "Edit"}
+                    </button>
+                    <button
+                      className="underline text-rose-300"
+                      disabled={busyId === p._id}
+                      onClick={() => onDelete(p._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+
+                {openEditId === p._id && <EditorRow key={`${p._id}-edit`} p={p} />}
+              </>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan="4" className="text-white/70 py-6 px-4">No projects yet.</td></tr>
+            {!filtered.length && (
+              <tr>
+                <td colSpan="4" className="text-white/70 py-6 px-4">
+                  {loading ? "Loading…" : "No projects yet."}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

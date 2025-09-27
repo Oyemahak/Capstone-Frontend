@@ -1,4 +1,3 @@
-// src/portals/admin/ProjectDetail.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { admin, projects as api } from "@/lib/api.js";
@@ -18,7 +17,7 @@ export default function ProjectDetail() {
       try {
         const [p, u] = await Promise.all([ api.one(projectId), admin.users() ]);
         if (!live) return;
-        setProject((p.project || p));
+        setProject(p.project || p);
         setUsers(u.users || []);
       } catch (e) { if (live) setErr(e.message); }
     })();
@@ -67,7 +66,7 @@ export default function ProjectDetail() {
               className="form-input"
               value={project.title || ""}
               onChange={(e)=>setProject(p=>({ ...p, title: e.target.value }))}
-              onBlur={()=>patch({ title: project.title })}
+              onBlur={()=>patch({ title: (project.title || "").trim() })}
             />
           </label>
 
@@ -77,7 +76,7 @@ export default function ProjectDetail() {
               className="form-input" rows={4}
               value={project.summary || ""}
               onChange={(e)=>setProject(p=>({ ...p, summary: e.target.value }))}
-              onBlur={()=>patch({ summary: project.summary })}
+              onBlur={()=>patch({ summary: (project.summary || "").trim() })}
             />
           </label>
 

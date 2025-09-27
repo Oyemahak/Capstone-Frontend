@@ -1,4 +1,3 @@
-// src/portals/admin/UserDetail.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { admin } from "@/lib/api.js";
@@ -12,29 +11,35 @@ export default function UserDetail() {
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
 
-  async function load(){
+  async function load() {
     try { const d = await admin.user(userId); setUser(d.user || d); setErr(""); }
-    catch(e){ setErr(e.message); }
+    catch (e) { setErr(e.message); }
   }
   useEffect(() => { load(); }, [userId]);
 
-  async function patch(next){
+  async function patch(next) {
     try {
       const d = await admin.updateUser(userId, next);
-      setUser(d.user || d); setOk("Saved"); setTimeout(()=>setOk(""), 1200);
-    } catch(e){ setErr(e.message); }
+      setUser(d.user || d);
+      setOk("Saved");
+      setTimeout(() => setOk(""), 1200);
+    } catch (e) { setErr(e.message); }
   }
 
-  async function remove(){
+  async function remove() {
     if (!confirm("Delete this user?")) return;
     try {
       await admin.deleteUser(userId);
-      nav("/admin/users", { replace:true });
-    } catch(e){ setErr(e.message); }
+      nav("/admin/users", { replace: true });
+    } catch (e) { setErr(e.message); }
   }
 
   if (!user) {
-    return <div className="px-4 pb-10">{err ? <div className="text-rose-400">{err}</div> : "Loading…"}</div>;
+    return (
+      <div className="px-4 pb-10">
+        {err ? <div className="text-rose-400">{err}</div> : "Loading…"}
+      </div>
+    );
   }
 
   const protectDelete = user.email === SUPER_EMAIL || user.isSuperAdmin;
@@ -61,8 +66,11 @@ export default function UserDetail() {
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Role</div>
-              <select className="form-input bg-transparent" value={user.role}
-                onChange={(e)=>patch({ role: e.target.value })}>
+              <select
+                className="form-input bg-transparent"
+                value={user.role}
+                onChange={(e) => patch({ role: e.target.value })}
+              >
                 <option value="client">Client</option>
                 <option value="developer">Developer</option>
                 <option value="admin">Admin</option>
@@ -71,8 +79,11 @@ export default function UserDetail() {
 
             <label className="block">
               <div className="text-xs text-white/65 mb-1">Status</div>
-              <select className="form-input bg-transparent" value={user.status}
-                onChange={(e)=>patch({ status: e.target.value })}>
+              <select
+                className="form-input bg-transparent"
+                value={user.status}
+                onChange={(e) => patch({ status: e.target.value })}
+              >
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
                 <option value="suspended">Suspended</option>

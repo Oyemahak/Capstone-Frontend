@@ -1,4 +1,3 @@
-// src/portals/admin/AdminDashboard.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { admin, projects } from "@/lib/api.js";

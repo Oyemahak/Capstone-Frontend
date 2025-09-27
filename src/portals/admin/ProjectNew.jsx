@@ -1,4 +1,3 @@
-// src/portals/admin/ProjectNew.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { admin, projects as apiProjects } from "@/lib/api.js";
@@ -11,7 +10,7 @@ export default function ProjectNew() {
   const [form, setForm] = useState({
     title: "",
     summary: "",
-    status: "active",  // default "in progress"
+    status: "active",
     client: "",
     developer: "",
   });
@@ -89,7 +88,7 @@ export default function ProjectNew() {
         </div>
 
         <div className="pt-1">
-          <button className="btn-primary" disabled={busy}>{busy ? "Creating…" : "Create project"}</button>
+          <button className="btn btn-primary" disabled={busy}>{busy ? "Creating…" : "Create project"}</button>
         </div>
       </form>
     </div>
