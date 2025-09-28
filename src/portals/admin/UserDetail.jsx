@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { admin } from "@/lib/api.js";
 
-const SUPER_EMAIL = "admin@mspixel.plus"; // UI safety; backend should also protect
+const SUPER_EMAIL = "admin@mspixel.plus"; // UI safety
 
 export default function UserDetail() {
   const nav = useNavigate();
@@ -21,71 +21,57 @@ export default function UserDetail() {
     try {
       const d = await admin.updateUser(userId, next);
       setUser(d.user || d);
-      setOk("Saved");
-      setTimeout(() => setOk(""), 1200);
+      setOk("Saved"); setTimeout(() => setOk(""), 1200);
     } catch (e) { setErr(e.message); }
   }
 
   async function remove() {
     if (!confirm("Delete this user?")) return;
-    try {
-      await admin.deleteUser(userId);
-      nav("/admin/users", { replace: true });
-    } catch (e) { setErr(e.message); }
+    try { await admin.deleteUser(userId); nav("/admin/users", { replace: true }); }
+    catch (e) { setErr(e.message); }
   }
 
   if (!user) {
-    return (
-      <div className="px-4 pb-10">
-        {err ? <div className="text-rose-400">{err}</div> : "Loading…"}
-      </div>
-    );
+    return <div className="page-shell">{err ? <div className="text-error">{err}</div> : "Loading…"}</div>;
   }
 
   const protectDelete = user.email === SUPER_EMAIL || user.isSuperAdmin;
 
   return (
-    <div className="page-shell space-y-5">
+    <div className="page-shell space-stack">
       <div className="page-header">
         <h2 className="page-title">User Detail</h2>
-        </div>
+        <div />
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card-surface p-6 space-y-4">
-          {ok && <div className="text-emerald-400 text-sm">{ok}</div>}
-          {err && <div className="text-rose-400 text-sm">{err}</div>}
+      <div className="grid-2">
+        <div className="card card-pad-lg form-stack">
+          {ok && <div className="text-success">{ok}</div>}
+          {err && <div className="text-error">{err}</div>}
 
           <div>
-            <div className="text-xs text-white/65 mb-1">Name</div>
+            <div className="form-label">Name</div>
             <div className="font-medium">{user.name}</div>
           </div>
 
           <div>
-            <div className="text-xs text-white/65 mb-1">Email</div>
+            <div className="form-label">Email</div>
             <div className="font-medium">{user.email}</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
-              <div className="text-xs text-white/65 mb-1">Role</div>
-              <select
-                className="form-input bg-transparent"
-                value={user.role}
-                onChange={(e) => patch({ role: e.target.value })}
-              >
+          <div className="form-grid-2">
+            <label className="form-field">
+              <div className="form-label">Role</div>
+              <select className="form-input bg-transparent" value={user.role} onChange={(e) => patch({ role: e.target.value })}>
                 <option value="client">Client</option>
                 <option value="developer">Developer</option>
                 <option value="admin">Admin</option>
               </select>
             </label>
 
-            <label className="block">
-              <div className="text-xs text-white/65 mb-1">Status</div>
-              <select
-                className="form-input bg-transparent"
-                value={user.status}
-                onChange={(e) => patch({ status: e.target.value })}
-              >
+            <label className="form-field">
+              <div className="form-label">Status</div>
+              <select className="form-input bg-transparent" value={user.status} onChange={(e) => patch({ status: e.target.value })}>
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
                 <option value="suspended">Suspended</option>
@@ -93,7 +79,7 @@ export default function UserDetail() {
             </label>
           </div>
 
-          <div className="pt-2">
+          <div className="form-actions">
             <button
               onClick={remove}
               disabled={protectDelete}
@@ -105,9 +91,9 @@ export default function UserDetail() {
           </div>
         </div>
 
-        <div className="card-surface p-6">
-          <div className="text-textSub text-sm mb-2">Meta</div>
-          <div className="space-y-1 text-xs">
+        <div className="card card-pad-lg">
+          <div className="text-muted">Meta</div>
+          <div className="meta">
             <div>ID: <code>{user._id}</code></div>
             <div>Role: <code>{user.role}</code></div>
             <div>Status: <code>{user.status}</code></div>

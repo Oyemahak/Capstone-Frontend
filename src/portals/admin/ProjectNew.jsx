@@ -17,10 +17,8 @@ export default function ProjectNew() {
 
   useEffect(() => {
     (async () => {
-      try {
-        const d = await admin.users();
-        setUsers(d.users || []);
-      } catch (e) { setErr(e.message); }
+      try { const d = await admin.users(); setUsers(d.users || []); }
+      catch (e) { setErr(e.message); }
     })();
   }, []);
 
@@ -49,39 +47,43 @@ export default function ProjectNew() {
   return (
     <div className="page-shell">
       <div className="page-header">
-        <h2 className="page-title">New roject</h2>
+        <h2 className="page-title">New Project</h2>
+        <div />
       </div>
 
-      <form onSubmit={submit} className="card-surface p-6 max-w-2xl space-y-4">
-        {err && <div className="text-rose-400 text-sm">{err}</div>}
+      <form onSubmit={submit} className="card card-pad-lg form-wide">
+        {err && <div className="text-error">{err}</div>}
 
-        <label className="block">
-          <div className="text-xs text-white/65 mb-1">Title</div>
+        <label className="form-field">
+          <div className="form-label">Title</div>
           <input className="form-input" value={form.title} onChange={e => set("title", e.target.value)} required />
         </label>
-        <label className="block">
-          <div className="text-xs text-white/65 mb-1">Summary</div>
-          <textarea className="form-input" rows={4} value={form.summary} onChange={e => set("summary", e.target.value)} />
+
+        <label className="form-field">
+          <div className="form-label">Summary</div>
+          <textarea className="form-input form-textarea" value={form.summary} onChange={e => set("summary", e.target.value)} />
         </label>
 
-        <div className="grid md:grid-cols-3 gap-3">
-          <label className="block">
-            <div className="text-xs text-white/65 mb-1">Status</div>
+        <div className="form-grid-3">
+          <label className="form-field">
+            <div className="form-label">Status</div>
             <select className="form-input bg-transparent" value={form.status} onChange={e => set("status", e.target.value)}>
               <option value="draft">Draft</option>
               <option value="active">In progress</option>
               <option value="completed">Completed</option>
             </select>
           </label>
-          <label className="block">
-            <div className="text-xs text-white/65 mb-1">Client</div>
+
+          <label className="form-field">
+            <div className="form-label">Client</div>
             <select className="form-input bg-transparent" value={form.client} onChange={e => set("client", e.target.value)}>
               <option value="">— Unassigned —</option>
               {clients.map(c => <option key={c._id} value={c._id}>{c.name} — {c.email}</option>)}
             </select>
           </label>
-          <label className="block">
-            <div className="text-xs text-white/65 mb-1">Developer</div>
+
+          <label className="form-field">
+            <div className="form-label">Developer</div>
             <select className="form-input bg-transparent" value={form.developer} onChange={e => set("developer", e.target.value)}>
               <option value="">— Unassigned —</option>
               {devs.map(d => <option key={d._id} value={d._id}>{d.name} — {d.email}</option>)}
@@ -89,7 +91,7 @@ export default function ProjectNew() {
           </label>
         </div>
 
-        <div className="pt-1">
+        <div className="form-actions">
           <button className="btn btn-primary" disabled={busy}>{busy ? "Creating…" : "Create project"}</button>
         </div>
       </form>

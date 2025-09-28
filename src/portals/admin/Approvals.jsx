@@ -1,96 +1,98 @@
-// src/portals/admin/Approvals.jsx
 import { useEffect, useState } from "react";
-import { admin } from "@/lib/api.js";
+import { Link } from "react-router-dom";
+import { admin, projects } from "@/lib/api.js";
 
-export default function Approvals() {
-  const [rows, setRows] = useState([]);
+export default function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [pending, setPending] = useState(0);
+  const [projs, setProjs] = useState([]);
   const [err, setErr] = useState("");
-  const [busyId, setBusyId] = useState("");
 
-  async function load() {
-    try {
-      const d = await admin.pending();
-      setRows(d.users || []);
-      setErr("");
-    } catch (e) {
-      setErr(e.message);
-      setRows([]);
-    }
-  }
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const [u, pend, p] = await Promise.all([
+          admin.users(),
+          admin.pending().catch(() => ({ users: [] })),
+          projects.list(),
+        ]);
+        if (!live) return;
+        setUsers(u.users || []);
+        setPending((pend.users || []).length);
+        setProjs(p.projects || []);
+        setErr("");
+      } catch (e) {
+        if (live) setErr(e.message);
+      }
+    })();
+    return () => (live = false);
+  }, []);
 
-  useEffect(() => { load(); }, []);
-
-  async function approve(id) {
-    setBusyId(id);
-    try {
-      await admin.approveUser(id); // PATCH
-      await load();
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setBusyId("");
-    }
-  }
-
-  async function reject(id) {
-    if (!confirm("Reject this request? The account will be removed.")) return;
-    setBusyId(id);
-    try {
-      await admin.rejectUser(id); // PATCH (/reject) – see backend
-      await load();
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setBusyId("");
-    }
-  }
+  const cards = [
+    { label: "Total Users", value: users.length, to: "/admin/users" },
+    { label: "Pending Approvals", value: pending, to: "/admin/approvals" },
+    { label: "Projects", value: projs.length, to: "/admin/projects" },
+  ];
 
   return (
     <div className="page-shell">
       <div className="page-header">
-        <h2 className="page-title">Pending Approvals</h2>
+        <h2 className="page-title">Overview</h2>
         <div />
       </div>
-      {err && <div className="mb-3 text-rose-400 text-sm">{err}</div>}
 
-      <div className="card-surface overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10 text-sm text-white/70">
-          {rows.length ? `${rows.length} request${rows.length > 1 ? "s" : ""}` : "No pending requests"}
-        </div>
-        <table className="table">
-          <thead>
-            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {rows.map(u => (
-              <tr key={u._id} className="hover:bg-white/5">
-                <td>{u.name || "—"}</td>
-                <td className="text-white/80">{u.email}</td>
-                <td><span className="badge">{u.role}</span></td>
-                <td><span className="badge">{u.status}</span></td>
-                <td className="space-x-3">
-                  <button
-                    className="btn btn-primary h-8 px-3"
-                    disabled={busyId === u._id}
-                    onClick={() => approve(u._id)}
-                  >
-                    {busyId === u._id ? "…" : "Approve"}
-                  </button>
-                  <button
-                    className="btn btn-outline h-8 px-3"
-                    disabled={busyId === u._id}
-                    onClick={() => reject(u._id)}
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
+      {err && <div className="text-error mb-4">{err}</div>}
+
+      <div className="grid-3">
+        {cards.map((c) => (
+          <Link key={c.label} to={c.to} className="card card-pad kpi-card">
+            <div className="kpi-label">{c.label}</div>
+            <div className="kpi-value">{c.value}</div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid-2 mt-section">
+        <div className="card card-pad">
+          <div className="card-head">
+            <h3 className="card-title">Recent users</h3>
+            <Link to="/admin/users" className="subtle-link">View all</Link>
+          </div>
+
+          <div className="list">
+            {(users || []).slice(0, 6).map((u) => (
+              <Link key={u._id} to={`/admin/users/${u._id}`} className="list-row">
+                <div>
+                  <div className="font-medium">{u.name || "—"}</div>
+                  <div className="text-muted-xs">{u.email}</div>
+                </div>
+                <div className="badge">{u.role}</div>
+              </Link>
             ))}
-            {!rows.length && (
-              <tr><td colSpan="5" className="text-white/70 py-6 px-4">Nothing to approve right now.</td></tr>
-            )}
-          </tbody>
-        </table>
+            {!users.length && <div className="empty-note">No users yet.</div>}
+          </div>
+        </div>
+
+        <div className="card card-pad">
+          <div className="card-head">
+            <h3 className="card-title">Recent projects</h3>
+            <Link to="/admin/projects" className="subtle-link">View all</Link>
+          </div>
+
+          <div className="list">
+            {(projs || []).slice(0, 6).map((p) => (
+              <Link key={p._id} to={`/admin/projects/${p._id}`} className="list-row">
+                <div>
+                  <div className="font-medium">{p.title}</div>
+                  <div className="text-muted-xs">{p.summary}</div>
+                </div>
+                <div className="badge">{p.status}</div>
+              </Link>
+            ))}
+            {!projs.length && <div className="empty-note">No projects yet.</div>}
+          </div>
+        </div>
       </div>
     </div>
   );

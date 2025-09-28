@@ -1,4 +1,3 @@
-// src/portals/admin/index.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import PortalShell from "@/components/portal/PortalShell.jsx";
 
