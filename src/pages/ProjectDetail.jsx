@@ -1,3 +1,4 @@
+// src/pages/ProjectDetail.jsx
 import { useParams, Link } from "react-router-dom";
 import Container from "../components/layout/Container.jsx";
 import { projects } from "../data/projects.js";
@@ -39,8 +40,22 @@ export default function ProjectDetail() {
             <p className="mt-4 text-textSub">
               {p.summary} We focused on speed, clarity, and conversion.
             </p>
+
             <div className="mt-6 flex gap-3">
-              <a className="btn btn-primary" href="#" target="_blank" rel="noreferrer">View Live</a>
+              {p.live ? (
+                <a
+                  className="btn btn-primary"
+                  href={p.live}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View Live Site
+                </a>
+              ) : (
+                <button className="btn btn-outline" disabled>
+                  Live link coming soon
+                </button>
+              )}
               <Link className="btn btn-outline" to="/contact">Start Similar Project</Link>
             </div>
           </div>

@@ -55,12 +55,12 @@ export default function Pricing() {
   );
 
   function goRegister() {
-    // Send the user to /register and include ?plan=<key>&label=<stack>
+    // Redirect to contact with context (plan + label)
     const params = new URLSearchParams({
       plan: active.key,
       label: active.stack,
     }).toString();
-    nav(`/register?${params}`);
+    nav(`/contact?${params}`);
   }
 
   return (

@@ -36,15 +36,16 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           {!isAuthed ? (
             <>
-              <NavLink to="/register" className={({ isActive }) =>
-                ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
-                 isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
-              }>Register</NavLink>
-
-              <NavLink to="/login" className={({ isActive }) =>
-                ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
-                 isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
-              }>Login</NavLink>
+              {/* Removed Register */}
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  ["px-4 h-10 rounded-xl font-bold inline-flex items-center",
+                   isActive ? "bg-white/10" : "bg-transparent hover:bg-white/5"].join(" ")
+                }
+              >
+                Login
+              </NavLink>
 
               <Link to="/contact" className="btn btn-primary h-10">Start Project</Link>
             </>
