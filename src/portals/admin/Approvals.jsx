@@ -1,98 +1,102 @@
+// src/portals/admin/Approvals.jsx
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { admin, projects } from "@/lib/api.js";
+import { admin } from "@/lib/api.js";
+import { Check, Trash2 } from "lucide-react";
 
-export default function AdminDashboard() {
-  const [users, setUsers] = useState([]);
-  const [pending, setPending] = useState(0);
-  const [projs, setProjs] = useState([]);
+export default function Approvals() {
+  const [pending, setPending] = useState([]);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const d = await admin.users();
+      setPending((d.users || []).filter((u) => u.status === "pending"));
+      setErr("");
+    } catch (e) {
+      setErr(e.message || "Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    let live = true;
-    (async () => {
-      try {
-        const [u, pend, p] = await Promise.all([
-          admin.users(),
-          admin.pending().catch(() => ({ users: [] })),
-          projects.list(),
-        ]);
-        if (!live) return;
-        setUsers(u.users || []);
-        setPending((pend.users || []).length);
-        setProjs(p.projects || []);
-        setErr("");
-      } catch (e) {
-        if (live) setErr(e.message);
-      }
-    })();
-    return () => (live = false);
+    load();
   }, []);
 
-  const cards = [
-    { label: "Total Users", value: users.length, to: "/admin/users" },
-    { label: "Pending Approvals", value: pending, to: "/admin/approvals" },
-    { label: "Projects", value: projs.length, to: "/admin/projects" },
-  ];
+  async function approve(id) {
+    try {
+      await admin.approveUser(id);
+      await load();
+    } catch (e) {
+      alert(e.message || "Approve failed");
+    }
+  }
+
+  async function remove(id) {
+    if (!confirm("Delete this user?")) return;
+    try {
+      await admin.deleteUser(id);
+      await load();
+    } catch (e) {
+      alert(e.message || "Delete failed");
+    }
+  }
 
   return (
-    <div className="page-shell">
+    <div className="page-shell space-y-5">
+      {/* Page title */}
       <div className="page-header">
-        <h2 className="page-title">Overview</h2>
+        <h2 className="page-title">Pending Approvals</h2>
         <div />
       </div>
 
-      {err && <div className="text-error mb-4">{err}</div>}
+      {err && <div className="text-error">{err}</div>}
 
-      <div className="grid-3">
-        {cards.map((c) => (
-          <Link key={c.label} to={c.to} className="card card-pad kpi-card">
-            <div className="kpi-label">{c.label}</div>
-            <div className="kpi-value">{c.value}</div>
-          </Link>
-        ))}
-      </div>
-
-      <div className="grid-2 mt-section">
-        <div className="card card-pad">
-          <div className="card-head">
-            <h3 className="card-title">Recent users</h3>
-            <Link to="/admin/users" className="subtle-link">View all</Link>
-          </div>
-
-          <div className="list">
-            {(users || []).slice(0, 6).map((u) => (
-              <Link key={u._id} to={`/admin/users/${u._id}`} className="list-row">
-                <div>
-                  <div className="font-medium">{u.name || "—"}</div>
-                  <div className="text-muted-xs">{u.email}</div>
-                </div>
-                <div className="badge">{u.role}</div>
-              </Link>
+      <div className="card-surface overflow-hidden">
+        <table className="table">
+          <thead>
+            <tr>
+              <th className="w-34">Name</th>
+              <th className="w-34">Email</th>
+              <th className="w-20">Role</th>
+              <th className="actions-head">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pending.map((u) => (
+              <tr key={u._id} className="table-row-hover">
+                <td className="font-medium">{u.name || "—"}</td>
+                <td className="text-muted">{u.email}</td>
+                <td className="capitalize">{u.role}</td>
+                <td className="actions-cell">
+                  <button
+                    onClick={() => approve(u._id)}
+                    className="icon-btn text-emerald-400 hover:text-emerald-300 mr-1"
+                    title="Approve"
+                  >
+                    <Check size={16} />
+                  </button>
+                  <button
+                    onClick={() => remove(u._id)}
+                    className="icon-btn text-rose-400 hover:text-rose-300"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
             ))}
-            {!users.length && <div className="empty-note">No users yet.</div>}
-          </div>
-        </div>
-
-        <div className="card card-pad">
-          <div className="card-head">
-            <h3 className="card-title">Recent projects</h3>
-            <Link to="/admin/projects" className="subtle-link">View all</Link>
-          </div>
-
-          <div className="list">
-            {(projs || []).slice(0, 6).map((p) => (
-              <Link key={p._id} to={`/admin/projects/${p._id}`} className="list-row">
-                <div>
-                  <div className="font-medium">{p.title}</div>
-                  <div className="text-muted-xs">{p.summary}</div>
-                </div>
-                <div className="badge">{p.status}</div>
-              </Link>
-            ))}
-            {!projs.length && <div className="empty-note">No projects yet.</div>}
-          </div>
-        </div>
+            {!pending.length && (
+              <tr>
+                <td colSpan="4" className="empty-cell">
+                  {loading ? "Loading…" : "No pending approvals."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

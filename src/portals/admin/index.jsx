@@ -1,3 +1,4 @@
+// src/portals/admin/index.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import PortalShell from "@/components/portal/PortalShell.jsx";
 
@@ -10,6 +11,9 @@ import ProjectDetail from "./ProjectDetail.jsx";
 import ProjectNew from "./ProjectNew.jsx";
 import Approvals from "./Approvals.jsx";
 import Settings from "./Settings.jsx";
+
+/* Billing (single page) */
+import Billings from "./Billings.jsx";
 
 export default function AdminPortal() {
   return (
@@ -26,6 +30,9 @@ export default function AdminPortal() {
         <Route path="projects" element={<Projects />} />
         <Route path="projects/new" element={<ProjectNew />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
+
+        {/* Billing list + inline editor (no subroute) */}
+        <Route path="billing" element={<Billings />} />
 
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

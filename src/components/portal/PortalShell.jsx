@@ -11,6 +11,7 @@ export default function PortalShell({ children }) {
       { to: "/admin/approvals", label: "Approvals" },
       { to: "/admin/users", label: "Users" },
       { to: "/admin/projects", label: "Projects" },
+      { to: "/admin/billing", label: "Billing" }, // ← added
       { to: "/admin/settings", label: "Settings" },
     ],
     developer: [
@@ -25,16 +26,11 @@ export default function PortalShell({ children }) {
   };
 
   const links = navs[role] || [];
-
   const itemClass = ({ isActive }) =>
-    [
-      "block px-4 py-2 rounded-lg font-semibold",
-      isActive ? "bg-white/10" : "hover:bg-white/5",
-    ].join(" ");
+    ["block px-4 py-2 rounded-lg font-semibold", isActive ? "bg-white/10" : "hover:bg-white/5"].join(" ");
 
   return (
     <div className="container-edge grid grid-cols-12 gap-6 py-6">
-      {/* Sidebar */}
       <aside className="col-span-12 md:col-span-3 lg:col-span-2">
         <div className="card-surface p-4">
           <div className="font-black text-lg">MSPixelPlus</div>
@@ -49,7 +45,6 @@ export default function PortalShell({ children }) {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <section className="col-span-12 md:col-span-9 lg:col-span-10">
         {children}
       </section>
