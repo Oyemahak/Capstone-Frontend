@@ -34,6 +34,31 @@ function Preview({ file }) {
   );
 }
 
+/* Clean file picker: hidden input + styled trigger + filename */
+function FilePicker({ id, value, label = "Upload invoice (PDF or image)", onPick, disabled }) {
+  return (
+    <div className="space-y-2">
+      <div className="form-label">{label}</div>
+      <div className="flex items-center gap-2">
+        <input
+          id={id}
+          type="file"
+          accept="application/pdf,image/*"
+          className="sr-only"
+          onChange={(e) => onPick(e.target.files?.[0] || null)}
+          disabled={disabled}
+        />
+        <label htmlFor={id} className={`btn btn-outline btn-sm ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+          Choose file
+        </label>
+        <span className="text-sm text-white/70 truncate max-w-[260px]">
+          {value?.name || "No file chosen"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Billings() {
   // data
   const [rows, setRows] = useState([]);
@@ -78,8 +103,7 @@ export default function Billings() {
       setCacheVersion((v) => v + 1); // refresh status badges in table
     }
 
-    async function onPick(kind, e) {
-      const file = e.target.files?.[0];
+    async function handlePick(kind, file) {
       if (!file) return;
       setBusyId(p._id);
       try {
@@ -116,16 +140,12 @@ export default function Billings() {
               <div className="card-title">Advance payment (50%)</div>
 
               {!advance ? (
-                <label className="block">
-                  <div className="form-label">Upload invoice (PDF or image)</div>
-                  <input
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="form-input"
-                    onChange={(e) => onPick("advance", e)}
-                    disabled={busyId === p._id}
-                  />
-                </label>
+                <FilePicker
+                  id={`adv-${p._id}`}
+                  value={advance}
+                  onPick={(file) => handlePick("advance", file)}
+                  disabled={busyId === p._id}
+                />
               ) : (
                 <>
                   <div className="text-sm">
@@ -149,16 +169,12 @@ export default function Billings() {
               <div className="card-title">Final invoice (after delivery)</div>
 
               {!finalInv ? (
-                <label className="block">
-                  <div className="form-label">Upload invoice (PDF or image)</div>
-                  <input
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="form-input"
-                    onChange={(e) => onPick("final", e)}
-                    disabled={busyId === p._id}
-                  />
-                </label>
+                <FilePicker
+                  id={`fin-${p._id}`}
+                  value={finalInv}
+                  onPick={(file) => handlePick("final", file)}
+                  disabled={busyId === p._id}
+                />
               ) : (
                 <>
                   <div className="text-sm">
@@ -237,8 +253,6 @@ export default function Billings() {
                     <td><StatusBadge inv={local.final} /></td>
 
                     <td className="actions-cell">
-                      {/* As requested: a clear "Manage billing" button that toggles inline editor.
-                          Not auto-opening, and not navigating away. */}
                       <button
                         className="btn btn-outline"
                         onClick={() => setOpenEditId((v) => (v === p._id ? null : p._id))}
