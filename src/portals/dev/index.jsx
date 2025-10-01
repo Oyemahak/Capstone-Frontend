@@ -1,20 +1,37 @@
 // src/portals/dev/index.jsx
-import { Routes, Route, Navigate, NavLink } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import PortalShell from "@/components/portal/PortalShell.jsx";
+
 import DevDashboard from "./DevDashboard.jsx";
-import Profile from "./Profile.jsx";
+import Projects from "./Projects.jsx";
+import ProjectDetail from "./ProjectDetail.jsx";
+import Team from "./Team.jsx";
+import Settings from "./Settings.jsx";
+import Discussions from "./Discussions.jsx";
+import Direct from "./Direct.jsx";
 
 export default function DevPortal() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 space-y-6">
-      <nav className="flex gap-3 text-sm">
-        <NavLink to="/dev" end className={({isActive})=>`px-3 py-1 rounded ${isActive?"bg-brand text-black":"bg-white/10"}`}>Dashboard</NavLink>
-        <NavLink to="/dev/profile" className={({isActive})=>`px-3 py-1 rounded ${isActive?"bg-brand text-black":"bg-white/10"}`}>Profile</NavLink>
-      </nav>
+    <PortalShell>
       <Routes>
         <Route index element={<DevDashboard />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/dev" replace />} />
+        <Route path="dashboard" element={<DevDashboard />} />
+
+        <Route path="projects" element={<Projects />} />
+        <Route path="projects/:projectId" element={<ProjectDetail />} />
+
+        {/* Project rooms */}
+        <Route path="discussions" element={<Discussions />} />
+        <Route path="discussions/:projectId" element={<Discussions />} />
+
+        {/* Direct messages */}
+        <Route path="direct" element={<Direct />} />
+        <Route path="direct/:peerId" element={<Direct />} />
+
+        <Route path="team" element={<Team />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="." replace />} />
       </Routes>
-    </div>
+    </PortalShell>
   );
 }

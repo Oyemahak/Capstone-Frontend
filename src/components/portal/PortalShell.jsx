@@ -11,12 +11,18 @@ export default function PortalShell({ children }) {
       { to: "/admin/approvals", label: "Approvals" },
       { to: "/admin/users", label: "Users" },
       { to: "/admin/projects", label: "Projects" },
-      { to: "/admin/billing", label: "Billing" }, // ← added
+      { to: "/admin/billing", label: "Billing" },
+      { to: "/admin/discussions", label: "Discussions" },
+      { to: "/admin/direct", label: "Direct" },
       { to: "/admin/settings", label: "Settings" },
     ],
     developer: [
       { to: "/dev", label: "Dashboard", end: true },
-      { to: "/dev/profile", label: "Profile" },
+      { to: "/dev/projects", label: "Projects" },
+      { to: "/dev/discussions", label: "Discussions" },
+      { to: "/dev/direct", label: "Direct" },          // ← NEW
+      { to: "/dev/team", label: "Team" },
+      { to: "/dev/settings", label: "Settings" },
     ],
     client: [
       { to: "/client", label: "Dashboard", end: true },

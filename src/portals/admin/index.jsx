@@ -11,9 +11,12 @@ import ProjectDetail from "./ProjectDetail.jsx";
 import ProjectNew from "./ProjectNew.jsx";
 import Approvals from "./Approvals.jsx";
 import Settings from "./Settings.jsx";
-
-/* Billing (single page) */
 import Billings from "./Billings.jsx";
+
+// Chat
+import Discussions from "./Discussions.jsx";
+import DirectIndex from "./DirectIndex.jsx";
+import Direct from "./Direct.jsx";
 
 export default function AdminPortal() {
   return (
@@ -31,8 +34,15 @@ export default function AdminPortal() {
         <Route path="projects/new" element={<ProjectNew />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
 
-        {/* Billing list + inline editor (no subroute) */}
         <Route path="billing" element={<Billings />} />
+
+        {/* Project rooms */}
+        <Route path="discussions" element={<Discussions />} />
+        <Route path="discussions/:projectId" element={<Discussions />} />
+
+        {/* Direct messages */}
+        <Route path="direct" element={<DirectIndex />} />
+        <Route path="direct/:peerId" element={<Direct />} />
 
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="dashboard" replace />} />

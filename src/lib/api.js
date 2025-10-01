@@ -86,3 +86,37 @@ export const debug = {
   seedBasic: () => http("/debug/seed-basic", { method: "POST" }),
   resetBasic: () => http("/debug/reset-basic", { method: "POST" }),
 };
+
+export const directory = {
+  list: () => http("/directory"),
+};
+
+export const dm = {
+  open: (peerId) => http("/dm/open", { method: "POST", body: { peerId } }),
+  threads: () => http("/dm/threads"),
+  get: (threadId, { before, limit = 50 } = {}) =>
+    http(`/dm/threads/${threadId}/messages${qs({ before, limit })}`),
+  send: (threadId, { text, attachments }) =>
+    http(`/dm/threads/${threadId}/messages`, {
+      method: "POST",
+      body: { text, attachments },
+    }),
+};
+
+export const rooms = {
+  get: (projectId, { before, limit = 50 } = {}) =>
+    http(`/rooms/${projectId}/messages${qs({ before, limit })}`),
+  send: (projectId, { text, attachments }) =>
+    http(`/rooms/${projectId}/messages`, {
+      method: "POST",
+      body: { text, attachments },
+    }),
+};
+
+function qs(obj = {}) {
+  const s = Object.entries(obj)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+  return s ? `?${s}` : "";
+}

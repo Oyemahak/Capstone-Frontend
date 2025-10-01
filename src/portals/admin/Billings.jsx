@@ -211,7 +211,7 @@ export default function Billings() {
       </div>
 
       {/* Filters */}
-      <div className="card-surface p-4 grid md:grid-cols-[1fr_auto] gap-3">
+      <div className="card card-pad filters-grid">
         <input
           className="form-input"
           placeholder="Search projects…"

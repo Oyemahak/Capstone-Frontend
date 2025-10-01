@@ -1,7 +1,8 @@
+// src/portals/admin/Projects.jsx
 import { useEffect, useMemo, useState, Fragment } from "react";
 import { Link } from "react-router-dom";
 import { admin, projects as api } from "@/lib/api.js";
-import { Pencil, Trash2, X, Plus, Wand2 } from "lucide-react";
+import { Pencil, Trash2, X, Plus, Wand2, MessageSquare } from "lucide-react";
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -60,11 +61,8 @@ export default function Projects() {
 
   function EditorRow({ p }) {
     const [local, setLocal] = useState({
-      title: p.title || "",
-      summary: p.summary || "",
-      status: p.status || "draft",
-      client: p.client?._id || "",
-      developer: p.developer?._id || "",
+      title: p.title || "", summary: p.summary || "", status: p.status || "draft",
+      client: p.client?._id || "", developer: p.developer?._id || "",
     });
     const setL = (k, v) => setLocal((s) => ({ ...s, [k]: v }));
 
@@ -169,6 +167,7 @@ export default function Projects() {
         <div />
       </div>
 
+      {/* Create form (optional) */}
       {showNew && (
         <form onSubmit={onCreate} className="card card-pad form-grid-2">
           <label className="form-field form-span-2">
@@ -212,6 +211,7 @@ export default function Projects() {
         </form>
       )}
 
+      {/* Filters */}
       <div className="card card-pad filters-grid">
         <input className="form-input" placeholder="Search title/summary…" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="form-input bg-transparent" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -224,6 +224,7 @@ export default function Projects() {
 
       {err && <div className="text-error">{err}</div>}
 
+      {/* Table */}
       <div className="card overflow-hidden">
         <table className="table">
           <thead>
@@ -246,6 +247,12 @@ export default function Projects() {
                   <td className="text-muted">{p.developer?.name || "—"}</td>
                   <td className="actions-cell">
                     <span className="badge mr-2 capitalize">{p.status}</span>
+
+                    {/* NEW: open chat for this project */}
+                    <Link className="icon-btn mr-1" title="Open discussion" to={`/admin/discussions/${p._id}`}>
+                      <MessageSquare size={16} />
+                    </Link>
+
                     <button
                       className="icon-btn mr-1"
                       title={openEditId === p._id ? "Close editor" : "Edit inline"}
@@ -253,6 +260,7 @@ export default function Projects() {
                     >
                       {openEditId === p._id ? <X size={16} /> : <Pencil size={16} />}
                     </button>
+
                     <button
                       className="icon-btn text-rose-300"
                       title="Delete"

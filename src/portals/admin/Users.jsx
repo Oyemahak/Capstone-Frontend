@@ -1,7 +1,8 @@
+// src/portals/admin/Users.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { admin } from "@/lib/api.js";
-import { Pencil, Trash2, Check, Plus } from "lucide-react";
+import { Pencil, Trash2, Check, Plus, MessageSquare } from "lucide-react";
 
 export default function Users() {
   const nav = useNavigate();
@@ -55,6 +56,17 @@ export default function Users() {
                 <td className="text-muted">{u.email}</td>
                 <td className="capitalize"><span className="badge">{u.status}</span></td>
                 <td className="actions-cell">
+                  {/* NEW: Chat / Direct message */}
+                  <Link
+                    to={`/admin/direct/${u._id}`}
+                    state={{ peerEmail: u.email, peerName: u.name }}
+                    className="icon-btn mr-1"
+                    title="Direct message"
+                  >
+                    <MessageSquare size={16} />
+                  </Link>
+
+                  {/* Existing actions */}
                   <Link to={`/admin/users/${u._id}`} className="icon-btn mr-1" title="Open / Edit">
                     <Pencil size={16} />
                   </Link>
