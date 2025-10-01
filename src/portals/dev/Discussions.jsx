@@ -8,9 +8,15 @@ function Bubble({ me, m }) {
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
       <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${mine ? "bg-primary text-white" : "bg-white/10"}`}>
-        {!mine && <div className="text-xs text-white/60 mb-0.5">{m.authorRoleAtSend}</div>}
+        {!mine && (
+          <div className="text-xs text-white/60 mb-0.5">
+            {m.authorRoleAtSend || "user"}
+          </div>
+        )}
         <div>{m.text}</div>
-        <div className="text-[10px] opacity-70 mt-1">{new Date(m.sentAt || m.ts).toLocaleString()}</div>
+        <div className="text-[10px] opacity-70 mt-1">
+          {new Date(m.sentAt || m.createdAt || m.ts).toLocaleString()}
+        </div>
       </div>
     </div>
   );
@@ -38,7 +44,7 @@ export default function Discussions() {
     })();
   }, [user?._id]);
 
-  // Load messages when project changes
+  // Load messages when project changes (always from backend)
   useEffect(() => {
     (async () => {
       if (!curr) { setMsgs([]); setRoomId(""); return; }
@@ -74,15 +80,25 @@ export default function Discussions() {
         <div className="card-surface">
           <div className="list">
             {filtered.map(p => (
-              <button
-                key={p._id}
-                className={`w-full text-left px-4 py-3 hover:bg-white/5 ${curr===p._id ? "bg-white/10" : ""}`}
-                onClick={() => { setCurr(p._id); nav(`/dev/discussions/${p._id}`, { replace: true }); }}
-                title="Open project room"
-              >
-                <div className="font-semibold line-clamp-1">{p.title}</div>
+              <div key={p._id} className={`px-4 py-3 ${curr === p._id ? "bg-white/10" : "hover:bg-white/5"}`}>
+                {/* Title links to details so you can open the project page */}
+                <div className="font-semibold line-clamp-1">
+                  <Link to={`/dev/projects/${p._id}`} className="row-link">{p.title}</Link>
+                </div>
                 {p.summary && <div className="row-sub line-clamp-1">{p.summary}</div>}
-              </button>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => { setCurr(p._id); nav(`/dev/discussions/${p._id}`, { replace: true }); }}
+                    title="Open discussion"
+                  >
+                    Open room
+                  </button>
+                  <Link className="btn btn-outline btn-sm" to={`/dev/projects/${p._id}`}>
+                    Open project
+                  </Link>
+                </div>
+              </div>
             ))}
             {!filtered.length && <div className="empty-cell">No projects.</div>}
           </div>
@@ -102,8 +118,17 @@ export default function Discussions() {
         </div>
 
         <div className="border-t border-white/10 p-3 flex gap-2">
-          <input className="form-input flex-1" placeholder="Write a message…" value={text} onChange={(e)=>setText(e.target.value)} onKeyDown={(e)=> e.key==="Enter" && send()} disabled={!roomId} />
-          <button className="btn btn-primary" onClick={send} disabled={!roomId || !text.trim()}>Send</button>
+          <input
+            className="form-input flex-1"
+            placeholder="Write a message…"
+            value={text}
+            onChange={(e)=>setText(e.target.value)}
+            onKeyDown={(e)=> e.key==="Enter" && send()}
+            disabled={!roomId}
+          />
+          <button className="btn btn-primary" onClick={send} disabled={!roomId || !text.trim()}>
+            Send
+          </button>
         </div>
       </div>
     </div>

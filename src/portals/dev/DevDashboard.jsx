@@ -15,16 +15,25 @@ export default function DevDashboard() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
+      setLoading(true);
       try {
         const d = await api.list();
-        const mine = (d.projects || []).filter(p => p.developer?._id === user?._id);
-        if (alive) setRows(mine);
+        const mine = (d.projects || []).filter(
+          (p) => String(p.developer?._id) === String(user?._id)
+        );
+        if (alive) {
+          setRows(mine);
+          setErr("");
+        }
       } catch (e) {
         if (alive) setErr(e.message || "Failed to load");
+      } finally {
+        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
@@ -32,10 +41,8 @@ export default function DevDashboard() {
 
   const counts = useMemo(() => {
     const total = rows.length;
-    const active = rows.filter(p => p.status === "active").length;
-    const draft = rows.filter(p => p.status === "draft").length;
-    const completed = rows.filter(p => p.status === "completed").length;
-    return { total, active, draft, completed };
+    const by = (s) => rows.filter((p) => p.status === s).length;
+    return { total, active: by("active"), draft: by("draft"), completed: by("completed") };
   }, [rows]);
 
   return (
@@ -69,6 +76,7 @@ export default function DevDashboard() {
           <div className="font-semibold">Recent activity</div>
           <Link className="subtle-link" to="/dev/projects">View all</Link>
         </div>
+
         <table className="table">
           <thead>
             <tr>
@@ -88,6 +96,7 @@ export default function DevDashboard() {
               return (
                 <tr key={p._id} className="table-row-hover">
                   <td>
+                    {/* Clicking the title goes to the project details page */}
                     <Link to={`/dev/projects/${p._id}`} className="row-link">
                       {p.title}
                     </Link>
@@ -103,10 +112,11 @@ export default function DevDashboard() {
                 </tr>
               );
             })}
+
             {!rows.length && (
               <tr>
                 <td colSpan="4" className="empty-cell">
-                  No projects assigned yet.
+                  {loading ? "Loading…" : "No projects assigned yet."}
                 </td>
               </tr>
             )}
