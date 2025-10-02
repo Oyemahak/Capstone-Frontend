@@ -26,8 +26,11 @@ export default function PortalShell({ children }) {
     ],
     client: [
       { to: "/client", label: "Dashboard", end: true },
-      { to: "/client/files", label: "Files" },
-      { to: "/client/profile", label: "Profile" },
+      { to: "/client/projects", label: "Projects" },
+      { to: "/client/discussions", label: "Discussions" },
+      { to: "/client/billing", label: "Billing" },
+      { to: "/client/support", label: "Support" },
+      { to: "/client/my-account", label: "My account" },
     ],
   };
 
