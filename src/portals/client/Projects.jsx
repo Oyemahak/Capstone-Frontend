@@ -59,18 +59,6 @@ export default function Projects() {
 
       {err && <div className="text-error">{err}</div>}
 
-      <div className="card-surface card-pad filters-grid">
-        <input
-          className="form-input"
-          placeholder="Search projects…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <button className="btn btn-outline" onClick={load} disabled={loading}>
-          {loading ? "Refreshing…" : "Refresh"}
-        </button>
-      </div>
-
       <div className="card-surface overflow-hidden">
         <table className="table">
           <thead>

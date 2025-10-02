@@ -1,3 +1,4 @@
+// src/portals/client/ProjectDetail.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { projects as api, rooms } from "@/lib/api.js";
@@ -142,6 +143,9 @@ export default function ProjectDetail() {
   const [quickPick, setQuickPick] = useState(COMMON_PAGES[0]);
   const [customPage, setCustomPage] = useState("");
 
+  /* savedAt for “overview” stats */
+  const [savedAt, setSavedAt] = useState(null);
+
   /* ───────── load project & chat ───────── */
   useEffect(() => {
     (async () => {
@@ -168,6 +172,7 @@ export default function ProjectDetail() {
     setPages(saved.pages || (saved.dynamicPages || [])); // backward compat
     setPageFiles(saved.pageFiles || {});
     setNotes(saved.notes || {});
+    setSavedAt(saved.savedAt || null);
   }, [projectId]);
 
   /* ───────── chat ───────── */
@@ -182,9 +187,11 @@ export default function ProjectDetail() {
   /* ───────── req save ───────── */
   function persistReq(next) {
     const payload = {
-      logo, reqDoc, supporting, pages, pageFiles, notes, savedAt: Date.now(),
+      logo, reqDoc, supporting, pages, pageFiles, notes,
+      savedAt: Date.now(),
       ...next,
     };
+    setSavedAt(payload.savedAt);
     writeReq(projectId, payload);
   }
 
@@ -215,10 +222,7 @@ export default function ProjectDetail() {
 
   function addPage(name) {
     if (!name) return;
-    if (pages.includes(name)) {
-      setOpenPageKey(name);
-      return;
-    }
+    if (pages.includes(name)) { setOpenPageKey(name); return; }
     const next = [...pages, name];
     setPages(next);
     ensureContainers(name);
@@ -226,21 +230,16 @@ export default function ProjectDetail() {
     persistReq({ pages: next });
   }
 
-  function addQuickPage() {
-    addPage(quickPick);
-  }
-
+  function addQuickPage() { addPage(quickPick); }
   function addCustom() {
-    const n = customPage.trim();
-    if (!n) return;
-    addPage(n);
-    setCustomPage("");
+    const n = customPage.trim(); if (!n) return;
+    addPage(n); setCustomPage("");
   }
 
   function removePage(name) {
     const nextPages = pages.filter((p) => p !== name);
-    const { [name]: _drop1, ...restFiles } = pageFiles;
-    const { [name]: _drop2, ...restNotes } = notes;
+    const { [name]: _f, ...restFiles } = pageFiles;
+    const { [name]: _n, ...restNotes } = notes;
     setPages(nextPages);
     setPageFiles(restFiles);
     setNotes(restNotes);
@@ -272,15 +271,11 @@ export default function ProjectDetail() {
     });
   }
 
-  const meta = useMemo(() => {
-    if (!proj) return null;
-    return [
-      ["Status", proj.status],
-      ["Developer", proj.developer?.name || "—"],
-      ["Client", proj.client?.name || "—"],
-      ["Budget", proj.budget ? `$${proj.budget}` : "—"],
-    ];
-  }, [proj]);
+  /* overview metrics */
+  const filesTotal = useMemo(() => {
+    const pageCount = Object.values(pageFiles || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+    return pageCount + supporting.length + (logo ? 1 : 0) + (reqDoc ? 1 : 0);
+  }, [pageFiles, supporting, logo, reqDoc]);
 
   /* build accordion items for pages */
   const pageItems = pages.map((name) => ({
@@ -301,7 +296,7 @@ export default function ProjectDetail() {
       <div className="space-stack">
         <Attachments
           files={pageFiles[name] || []}
-          onAdd={(e) => addPageFile(name)}
+          onAdd={() => addPageFile(name)}
           onRemove={(i) => removePageFile(name, i)}
         />
         <div>
@@ -312,7 +307,11 @@ export default function ProjectDetail() {
             value={notes[name] || ""}
             onChange={(e) => {
               const v = e.target.value;
-              setNotes((n) => { const next = { ...n, [name]: v }; persistReq({ notes: next }); return next; });
+              setNotes((n) => {
+                const next = { ...n, [name]: v };
+                persistReq({ notes: next });
+                return next;
+              });
             }}
           />
         </div>
@@ -320,50 +319,93 @@ export default function ProjectDetail() {
     ),
   }));
 
+  /* simple, roomy pill tabs */
+  function TabButton({ id, children }) {
+    const active = tab === id;
+    return (
+      <button
+        onClick={() => setTab(id)}
+        className={[
+          "px-4 py-2 rounded-full font-medium transition-colors",
+          active ? "bg-white/10" : "hover:bg-white/5"
+        ].join(" ")}
+        aria-current={active ? "page" : undefined}
+      >
+        {children}
+      </button>
+    );
+  }
+
   return (
     <div className="page-shell space-y-6">
       {/* Header + breadcrumb */}
       <div className="page-header">
-        <div className="row-sub">
-          <Link to="/client/projects" className="subtle-link">Projects</Link> /{" "}
-          <span className="text-white/70">{proj?.title || "Project"}</span>
-        </div>
-        <h2 className="page-title">{proj?.title || "Project"}</h2>
+                <h2 className="page-title">{proj?.title || "Project"}</h2>
         <div />
       </div>
 
-      {/* Tab bar */}
-      <div className="card-surface px-2 py-1">
-        <div className="flex gap-1">
-          <button className={`tab ${tab === "overview" ? "tab-active" : ""}`} onClick={() => setTab("overview")}>Overview</button>
-          <button className={`tab ${tab === "requirements" ? "tab-active" : ""}`} onClick={() => setTab("requirements")}>Requirements</button>
-          <button className={`tab ${tab === "discussions" ? "tab-active" : ""}`} onClick={() => setTab("discussions")}>Discussions</button>
-          <Link to={`/client/discussions/${projectId}`} className="ml-auto subtle-link">Open full discussion</Link>
+      {/* Tab bar (spacious, separated pills) */}
+      <div className="card-surface py-2 px-3">
+        <div className="flex items-center gap-2">
+          <TabButton id="overview">Overview</TabButton>
+          <TabButton id="requirements">Requirements</TabButton>
+          <TabButton id="discussions">Discussions</TabButton>
+          <Link to={`/client/discussions/${projectId}`} className="ml-auto subtle-link">
+            Open full discussion
+          </Link>
         </div>
       </div>
 
       {/* OVERVIEW */}
       {tab === "overview" && (
         <div className="grid gap-5 md:grid-cols-2">
-          <div className="card-surface p-4">
-            <div className="card-title mb-2">Summary</div>
+          {/* Summary with page badges */}
+          <div className="card-surface p-4 space-y-3">
+            <div className="card-title">Summary</div>
             <div className="text-white/80">{proj?.summary || "No summary yet."}</div>
+
+            <div className="mt-2">
+              <div className="row-sub mb-2">Pages added</div>
+              {pages.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {pages.map((p) => (
+                    <span key={p} className="badge">{p}</span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-white/60 text-sm">No pages added yet.</div>
+              )}
+            </div>
           </div>
+
+          {/* Meaningful details */}
           <div className="card-surface p-4">
             <div className="card-title mb-2">Details</div>
             <div className="grid grid-cols-2 gap-3">
-              {meta?.map(([k, v]) => (
-                <div key={k}>
-                  <div className="row-sub">{k}</div>
-                  <div className="font-medium">{v}</div>
+              <div>
+                <div className="row-sub">Developer</div>
+                <div className="font-medium">{proj?.developer?.name || "—"}</div>
+              </div>
+              <div>
+                <div className="row-sub">Pages selected</div>
+                <div className="font-medium">{pages.length}</div>
+              </div>
+              <div>
+                <div className="row-sub">Total files</div>
+                <div className="font-medium">{filesTotal}</div>
+              </div>
+              <div>
+                <div className="row-sub">Last saved</div>
+                <div className="font-medium">
+                  {savedAt ? new Date(savedAt).toLocaleString() : "—"}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* REQUIREMENTS */}
+      {/* REQUIREMENTS (unchanged behavior) */}
       {tab === "requirements" && (
         <div className="stack">
           {/* Core */}

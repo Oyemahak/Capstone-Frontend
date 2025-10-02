@@ -139,28 +139,6 @@ export default function ClientBillings() {
         <div />
       </div>
 
-      {/* Filters */}
-      <div className="card card-pad filters-grid">
-        <input
-          className="form-input"
-          placeholder="Search projects…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <div className="flex gap-2">
-          <button className="btn btn-outline" onClick={load} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
-          <button
-            className="btn btn-outline"
-            onClick={() => setRefreshTick((v) => v + 1)}
-            title="Re-read local invoice cache"
-          >
-            Reload invoices
-          </button>
-        </div>
-      </div>
-
       {err && <div className="text-error">{err}</div>}
 
       {/* Table */}
