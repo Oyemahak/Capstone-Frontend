@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
+import { API_BASE } from "@/lib/api.js";
 
 const TABS = [
   { key: "client",    label: "Client",    email: "client@mspixel.pulse",    password: "client" },
@@ -20,6 +21,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [waking, setWaking] = useState(false); // UI hint for cold-starts
 
   // Already authed? bounce to portal
   useEffect(() => {
@@ -29,10 +31,32 @@ export default function Login() {
     else nav("/client", { replace: true });
   }, [isAuthed, role, nav]);
 
+  // Extra gentle nudge to wake backend when reaching the login page
+  useEffect(() => {
+    const url = `${API_BASE}/health`;
+    setWaking(true);
+    fetch(url, { method: "GET", credentials: "include" })
+      .catch(() => {}) // ignore errors; it's just a warm-up
+      .finally(() => setTimeout(() => setWaking(false), 1200));
+  }, []);
+
   function fillDemo() {
     if (!active) return;
     setEmail(active.email);
     setPassword(active.password);
+  }
+
+  function friendlyColdStart(e) {
+    const code = e?.status;
+    const msg = (e?.message || "").toLowerCase();
+    const looksCold =
+      !code || // network / CORS / cold timeout often surface without a status
+      (code >= 500 && code < 600) ||
+      msg.includes("fetch") ||
+      msg.includes("failed") ||
+      msg.includes("network") ||
+      msg.includes("timeout");
+    return looksCold;
   }
 
   async function onSubmit(e) {
@@ -47,7 +71,13 @@ export default function Login() {
       else if (r === "developer") nav("/dev", { replace: true });
       else nav("/client", { replace: true });
     } catch (ex) {
-      setErr(ex?.message || "Login failed");
+      if (friendlyColdStart(ex)) {
+        setErr(
+          "Warming up the backend… give it a moment and try again. (First visit after a while can be a little sleepy!)"
+        );
+      } else {
+        setErr(ex?.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -77,11 +107,7 @@ export default function Login() {
                   className={[
                     "px-3 py-1.5 text-sm rounded-lg transition-colors",
                     "focus:outline-none focus:ring-2 focus:ring-emerald-400/70",
-                    selected
-                      // selected = white text + subtle filled bg (same vibe as hover)
-                      ? "text-white bg-white/15"
-                      // unselected = white/80 -> white on hover; subtle hover bg
-                      : "text-white/80 hover:text-white hover:bg-white/10",
+                    selected ? "text-white bg-white/15" : "text-white/80 hover:text-white hover:bg-white/10",
                   ].join(" ")}
                 >
                   {t.label}
@@ -93,6 +119,12 @@ export default function Login() {
 
         {/* Form */}
         <form onSubmit={onSubmit} className="px-6 pt-5 pb-6 space-y-4">
+          {waking && (
+            <div className="text-xs text-amber-300">
+              Getting things ready… waking the server now.
+            </div>
+          )}
+
           <label className="block">
             <div className="text-xs text-white/65 mb-1">Email</div>
             <input

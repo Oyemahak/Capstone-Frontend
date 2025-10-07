@@ -2,6 +2,11 @@
 export const API_BASE =
   (import.meta.env.VITE_API_BASE?.replace(/\/$/, "") || "http://localhost:4000/api");
 
+/** Resolve the API root (without /api) for /health pings */
+function apiRoot() {
+  return API_BASE.replace(/\/api$/, "");
+}
+
 /** Read token saved by AuthContext/Login */
 function getToken() {
   try {
@@ -10,6 +15,35 @@ function getToken() {
   } catch {
     return "";
   }
+}
+
+/* ─────────────────────────────────────────────────────────
+   WARM-UP HELPERS
+   - pingApi(): fire-and-forget call to /health
+   - ensureAwake(): try a few pings with backoff before real requests
+   ───────────────────────────────────────────────────────── */
+export async function pingApi({ timeoutMs = 4000 } = {}) {
+  const url = `${apiRoot()}/health`;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    await fetch(url, { cache: "no-store", signal: ctrl.signal, credentials: "omit" });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/** Try to wake the backend (0.5s, 1s, 2s, 4s …) */
+export async function ensureAwake({ attempts = 6 } = {}) {
+  for (let i = 0; i < attempts; i++) {
+    const ok = await pingApi({ timeoutMs: 4500 });
+    if (ok) return true;
+    await new Promise((r) => setTimeout(r, 500 * Math.max(1, 2 ** i)));
+  }
+  return false; // even if it didn't respond, don't block the app
 }
 
 async function http(path, { method = "GET", body, headers } = {}) {
@@ -66,7 +100,7 @@ export const admin = {
   stats: () => http("/admin/stats"),
 };
 
-// src/lib/api.js  (showing the whole file is noisy; replace the projects block with this:)
+// (rest unchanged)
 export const projects = {
   list: () => http("/projects"),
   one: (id) => http(`/projects/${id}`),
