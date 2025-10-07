@@ -9,6 +9,8 @@ import Team from "./Team.jsx";
 import Settings from "./Settings.jsx";
 import Discussions from "./Discussions.jsx";
 import Direct from "./Direct.jsx";
+// NEW
+import Requirements from "./Requirements.jsx";
 
 export default function DevPortal() {
   return (
@@ -19,6 +21,8 @@ export default function DevPortal() {
 
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
+        {/* NEW: Requirements page for this project */}
+        <Route path="projects/:projectId/requirements" element={<Requirements />} />
 
         {/* Project rooms */}
         <Route path="discussions" element={<Discussions />} />

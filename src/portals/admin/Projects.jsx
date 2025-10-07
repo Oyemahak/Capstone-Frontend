@@ -24,9 +24,15 @@ export default function Projects() {
 
   async function load() {
     setLoading(true); setErr("");
-    try { const [p, u] = await Promise.all([api.list(), admin.users()]); setProjects(p.projects || []); setUsers(u.users || []); }
-    catch (e) { setErr(e.message || "Failed to fetch"); }
-    finally { setLoading(false); }
+    try {
+      const [p, u] = await Promise.all([api.list(), admin.users()]);
+      setProjects(p.projects || []);
+      setUsers(u.users || []);
+    } catch (e) {
+      setErr(e.message || "Failed to fetch");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { load(); }, []);
 
@@ -248,7 +254,7 @@ export default function Projects() {
                   <td className="actions-cell">
                     <span className="badge mr-2 capitalize">{p.status}</span>
 
-                    {/* NEW: open chat for this project */}
+                    {/* discussion */}
                     <Link className="icon-btn mr-1" title="Open discussion" to={`/admin/discussions/${p._id}`}>
                       <MessageSquare size={16} />
                     </Link>

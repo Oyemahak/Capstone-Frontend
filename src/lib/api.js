@@ -30,7 +30,7 @@ async function http(path, { method = "GET", body, headers } = {}) {
     : await res.text();
 
   if (!res.ok) {
-    const err = new Error((data && data.message) || `HTTP ${res.status}`);
+    const err = new Error((data && (data.message || data.error)) || `HTTP ${res.status}`);
     err.status = res.status;
     err.data = data;
     throw err;
@@ -44,15 +44,11 @@ export const auth = {
     http("/auth/login", { method: "POST", body: { email, password } }),
   logout: () => http("/auth/logout", { method: "POST" }),
   me: () => http("/auth/me"),
-
-  // Try /auth/register then fall back to /register if old backend
   register: async (payload) => {
     try {
       return await http("/auth/register", { method: "POST", body: payload });
     } catch (e) {
-      if (e?.status === 404) {
-        return http("/register", { method: "POST", body: payload });
-      }
+      if (e?.status === 404) return http("/register", { method: "POST", body: payload });
       throw e;
     }
   },
@@ -64,22 +60,22 @@ export const admin = {
   createUser: (payload) => http("/admin/users", { method: "POST", body: payload }),
   updateUser: (id, payload) => http(`/admin/users/${id}`, { method: "PATCH", body: payload }),
   deleteUser: (id) => http(`/admin/users/${id}`, { method: "DELETE" }),
-
   pending: () => http("/admin/users?status=pending"),
-
-  // IMPORTANT: backend expects PATCH
   approveUser: (id) => http(`/admin/users/${id}/approve`, { method: "PATCH" }),
   rejectUser: (id) => http(`/admin/users/${id}/reject`, { method: "PATCH" }),
-
   stats: () => http("/admin/stats"),
 };
 
+// src/lib/api.js  (showing the whole file is noisy; replace the projects block with this:)
 export const projects = {
   list: () => http("/projects"),
   one: (id) => http(`/projects/${id}`),
   create: (payload) => http("/projects", { method: "POST", body: payload }),
   update: (id, payload) => http(`/projects/${id}`, { method: "PATCH", body: payload }),
   remove: (id) => http(`/projects/${id}`, { method: "DELETE" }),
+
+  // NEW: add evidence entry; body = { title, links, images, ts }
+  addEvidence: (id, entry) => http(`/projects/${id}/evidence`, { method: "POST", body: entry }),
 };
 
 export const debug = {
@@ -111,6 +107,76 @@ export const rooms = {
       method: "POST",
       body: { text, attachments },
     }),
+};
+
+/* ---------- Requirements (unchanged from your working version) ---------- */
+export const requirements = {
+  get: (projectId) => http(`/projects/${projectId}/requirements`),
+  async upsert(projectId, payload) {
+    const token = getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const fd = new FormData();
+    fd.append("replace", "true");
+    fd.append("pages", JSON.stringify(payload.pages || []));
+    if (payload.files?.logo)  fd.append("logo",  payload.files.logo);
+    if (payload.files?.brief) fd.append("brief", payload.files.brief);
+    (payload.files?.supporting || []).forEach((f) => fd.append("supporting[]", f));
+    if (payload.files?.pageFiles) {
+      for (const [name, list] of Object.entries(payload.files.pageFiles)) {
+        (list || []).forEach((f) => fd.append(`pageFiles[${name}][]`, f));
+      }
+    }
+    const res = await fetch(`${API_BASE}/projects/${projectId}/requirements`, {
+      method: "PUT",
+      credentials: "include",
+      headers,
+      body: fd,
+    });
+    const ct = res.headers.get("content-type") || "";
+    const data = ct.includes("application/json") ? await res.json().catch(() => ({})) : await res.text();
+    if (!res.ok) {
+      const err = new Error((data && (data.message || data.error)) || `HTTP ${res.status}`);
+      err.status = res.status; err.data = data; throw err;
+    }
+    return data;
+  },
+  setReview: (projectId, reviewed) =>
+    http(`/projects/${projectId}/requirements/review`, { method: "PATCH", body: { reviewed } }),
+  remove: (projectId) => http(`/projects/${projectId}/requirements`, { method: "DELETE" }),
+};
+
+/* ---------- Files: Supabase uploader endpoint ---------- */
+export const files = {
+  upload: async (file) => {
+    const token = getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`${API_BASE}/files/upload`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: fd,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data?.error || `HTTP ${res.status}`);
+      err.status = res.status; err.data = data; throw err;
+    }
+    // { file: { name,type,size,path,url } }
+    return data;
+  },
+};
+
+/* ---------- Invoices (billing) ---------- */
+export const invoices = {
+  list: (projectId) => http(`/projects/${projectId}/invoices`), // { invoices: [...] }
+  create: (projectId, payload) =>
+    http(`/projects/${projectId}/invoices`, { method: "POST", body: payload }), // { ok, invoice }
+  updateStatus: (projectId, invoiceId, status) =>
+    http(`/projects/${projectId}/invoices/${invoiceId}`, { method: "PATCH", body: { status } }),
+  remove: (projectId, invoiceId) =>
+    http(`/projects/${projectId}/invoices/${invoiceId}`, { method: "DELETE" }),
 };
 
 function qs(obj = {}) {

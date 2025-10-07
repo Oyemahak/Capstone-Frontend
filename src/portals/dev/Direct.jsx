@@ -75,7 +75,7 @@ export default function Direct() {
       <div>
         <div className="card-surface p-4 mb-3">
           <div className="card-title mb-2">People</div>
-          <input className="form-input" placeholder={`Search… (${filtered.length} users)`} value={q} onChange={(e)=>setQ(e.target.value)} />
+          <input className="form-input" placeholder={`Search users...`} value={q} onChange={(e)=>setQ(e.target.value)} />
         </div>
         <div className="card-surface">
           <div className="list">

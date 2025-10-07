@@ -18,6 +18,9 @@ import Discussions from "./Discussions.jsx";
 import DirectIndex from "./DirectIndex.jsx";
 import Direct from "./Direct.jsx";
 
+// NEW
+import Requirements from "./Requirements.jsx";
+
 export default function AdminPortal() {
   return (
     <PortalShell>
@@ -33,6 +36,9 @@ export default function AdminPortal() {
         <Route path="projects" element={<Projects />} />
         <Route path="projects/new" element={<ProjectNew />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
+
+        {/* NEW: Requirements read-only view per project */}
+        <Route path="projects/:projectId/requirements" element={<Requirements />} />
 
         <Route path="billing" element={<Billings />} />
 
