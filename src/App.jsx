@@ -79,15 +79,6 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-transparent text-textMain">
       <AppHeader />
 
-      {/* NEW: friendly, small notice while backend wakes up once */}
-      {warming && (
-        <div className="px-4">
-          <div className="mx-auto max-w-6xl mt-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-center text-xs">
-            Hold up a sec — waking the backend (it can be a lil’ sleepy 😴)…
-          </div>
-        </div>
-      )}
-
       <main className="flex-1 pt-16">
         <ScrollToTop />
         <Suspense fallback={<PageFallback />}>
