@@ -3,7 +3,7 @@ export const projects = [
   {
     id: "canstem-education",
     title: "CanSTEM Education (Private School)",
-    summary: "WordPress site for a private STEM school.",
+    summary: "WordPress site for a CanSTEM Education private STEM school.",
     stack: ["WordPress"],
     live: "https://canstemeducation.com/",
     thumb:
@@ -11,29 +11,20 @@ export const projects = [
   },
   {
     id: "aimze-salon",
-    title: "Aimze Studio — Salon & Spa",
-    summary: "WordPress salon site with services & bookings.",
+    title: "Aímze Studio — Salon & Spa",
+    summary: "WordPress Hair salon & Spa site with services & bookings.",
     stack: ["WordPress"],
-    live: "https://www.aimzestudio.com/", 
+    live: "https://www.aimzestudio.com/",
     thumb:
       "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?q=80&w=1400&auto=format&fit=crop",
   },
   {
-    id: "mahak-portfolio-react",
-    title: "MahakPatel.com",
-    summary: "Personal portfolio built in React.",
-    stack: ["React"],
-    live: "https://mahakpatel.com/", 
-    thumb:
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1400&auto=format&fit=crop",
-  },
-  {
-    id: "mahak-portfolio-wix",
-    title: "Portfolio (Wix)",
-    summary: "Alternate portfolio built using Wix.",
+    id: "dazzling-smile",
+    title: "Dazzling Smile Dental Clinic",
+    summary: "Modern, calming dental clinic website focused on local SEO.",
     stack: ["Wix"],
-    live: "https://mahakpatel.wixstudio.io/portfolio/", 
+    live: "https://dazzlingsmile.ca/",
     thumb:
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1400&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1504439468489-c8920d796a29?q=80&w=1400&auto=format&fit=crop",
   },
 ];

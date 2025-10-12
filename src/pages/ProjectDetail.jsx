@@ -1,6 +1,7 @@
 // src/pages/ProjectDetail.jsx
 import { useParams, Link } from "react-router-dom";
 import Container from "../components/layout/Container.jsx";
+import Meta from "../components/Meta.jsx";
 import { projects } from "../data/projects.js";
 
 export default function ProjectDetail() {
@@ -11,9 +12,10 @@ export default function ProjectDetail() {
     return (
       <main className="section main-pad-top">
         <Container className="container-edge">
+          <Meta title="Project not found — MSPixelPulse" />
           <div className="card-surface p-8 text-center">
             <h1 className="text-2xl font-black mb-2">Project not found</h1>
-            <p className="text-textSub">Please pick a project from the list.</p>
+            <p className="text-textSub text-desc">Please pick a project from the list.</p>
             <Link className="btn btn-primary mt-6" to="/projects">Back to Projects</Link>
           </div>
         </Container>
@@ -23,6 +25,7 @@ export default function ProjectDetail() {
 
   return (
     <main className="section main-pad-top">
+      <Meta title={`${p.title} — MSPixelPulse`} description={p.summary} />
       <Container className="container-edge">
         <div className="grid gap-8 lg:grid-cols-2">
           <img
@@ -37,7 +40,7 @@ export default function ProjectDetail() {
                 <span key={s} className="badge">{s}</span>
               ))}
             </div>
-            <p className="mt-4 text-textSub">
+            <p className="mt-4 text-textSub text-desc">
               {p.summary} We focused on speed, clarity, and conversion.
             </p>
 
@@ -49,14 +52,14 @@ export default function ProjectDetail() {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  View Live Site
+                  View live site
                 </a>
               ) : (
                 <button className="btn btn-outline" disabled>
                   Live link coming soon
                 </button>
               )}
-              <Link className="btn btn-outline" to="/contact">Start Similar Project</Link>
+              <Link className="btn btn-outline" to="/contact">Start similar project</Link>
             </div>
           </div>
         </div>

@@ -83,6 +83,23 @@ export default function Contact() {
             </ul>
           </div>
         </div>
+        {/* Inline CTA */}
+        <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto] gap-4 items-center">
+          <div>
+            <h3 className="text-2xl font-black">Have a project in mind?</h3>
+            <p className="text-textSub mt-1 text-[16px] md:text-[18px] leading-relaxed">
+              Tell us your goals — we’ll propose the simplest path to launch.
+            </p>
+          </div>
+          <a
+            className="btn btn-primary"
+            href="https://calendly.com/mspixelpulse/30min"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Book appointment
+          </a>
+        </div>
       </Container>
     </section>
   );

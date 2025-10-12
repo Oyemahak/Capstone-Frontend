@@ -1,3 +1,4 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,7 +20,7 @@ body {
   @apply text-textMain antialiased bg-transparent;
 }
 
-/* Optional: keep scrollbar slot reserved */
+/* Reserve scrollbar slot */
 html {
   overflow-y: scroll;
 }
@@ -80,27 +81,6 @@ html {
   @apply mt-5;
 }
 
-.toolbar-bottom {
-  @apply flex items-center justify-end gap-2 pt-2;
-}
-
-/* Header strip inside cards (lists/tables) */
-.card-head {
-  @apply flex items-center justify-between mb-3;
-}
-
-.card-title {
-  @apply font-extrabold;
-}
-
-.card-strip {
-  @apply px-4 py-3 border-b border-white/10 text-sm text-white/70;
-}
-
-.card-strip.between {
-  @apply flex items-center justify-between;
-}
-
 /* ───────────────────────────────────────────────────────────
    Buttons & badges
    ─────────────────────────────────────────────────────────── */
@@ -124,7 +104,6 @@ html {
   @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
 }
 
-/* icon button */
 .icon-btn {
   @apply h-8 w-8 inline-grid place-items-center rounded-lg hover:bg-white/10;
 }
@@ -173,22 +152,7 @@ html {
   @apply text-3xl font-black mt-1;
 }
 
-/* List rows (dashboard panels) */
-.list {
-  @apply divide-y divide-white/10;
-}
-
-.list-row {
-  @apply flex items-center justify-between py-3 hover:bg-white/5 px-2 rounded-lg;
-}
-
-.empty-note {
-  @apply text-white/70 text-sm py-2;
-}
-
-/* ───────────────────────────────────────────────────────────
-   Tables
-   ─────────────────────────────────────────────────────────── */
+/* Tables (kept) */
 @layer components {
   .table {
     @apply w-full text-sm;
@@ -218,7 +182,6 @@ html {
     @apply text-right whitespace-nowrap pr-4;
   }
 
-  /* width helpers for columns */
   .w-42 {
     width: 42%;
   }
@@ -236,27 +199,19 @@ html {
   }
 }
 
-/* Empty states inside tables */
 .empty-cell {
   @apply text-white/70 py-6 px-5;
 }
 
-/* Inline editor row look */
 .row-edit td {
   @apply p-4 bg-white/5;
 }
 
-/* ───────────────────────────────────────────────────────────
-   Forms
-   ─────────────────────────────────────────────────────────── */
+/* Forms (kept) */
 input,
 select,
 textarea {
   @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 h-11;
-}
-
-.form-input {
-  /* alias for clarity */
 }
 
 textarea,
@@ -300,34 +255,260 @@ textarea,
   @apply mt-4;
 }
 
-.form-field {
-  /* wrapper for labels/inputs */
-}
-
 .form-label {
   @apply text-xs text-white/65 mb-1;
 }
 
-/* Filters 1fr / 200px grid */
 .filters-grid {
   @apply card-pad;
   display: grid;
-  gap: 0.75rem;
+  gap: .75rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width:768px) {
   .filters-grid {
     grid-template-columns: 1fr 200px;
   }
 }
 
-/* ───────────────────────────────────────────────────────────
-   Liquid canvas container (unchanged)
-   ─────────────────────────────────────────────────────────── */
+/* Liquid canvas container */
 .liquid-ether-container {
   position: relative;
   overflow: hidden;
   width: 100%;
   height: 100%;
   touch-action: none;
+}
+
+/* ───────────────────────────────────────────────────────────
+   NEW utilities / effects
+   ─────────────────────────────────────────────────────────── */
+
+/* 16px mobile / 18px desktop for description text */
+.text-desc {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@media (min-width:768px) {
+  .text-desc {
+    font-size: 18px;
+  }
+}
+
+/* Simple fade-up */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp .6s ease-out both;
+}
+
+/* ===================== Includes panel with animated gradient border ===================== */
+.include-panel {
+  position: relative;
+  border-radius: 1.5rem;
+  /* 24px */
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 60px rgba(82, 39, 255, 0.15);
+}
+
+@media (min-width:768px) {
+  .include-panel {
+    padding: 1.75rem;
+  }
+}
+
+.include-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  font-size: 1.125rem;
+  /* ~18px */
+  margin-bottom: 1rem;
+}
+
+.include-pill {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  padding: .9rem 1.1rem;
+  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.include-pill:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Animated border ring (masked gradient) */
+.include-ring {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.6rem;
+  padding: 1px;
+  background:
+    linear-gradient(120deg, #5B8CFF, transparent 30%),
+    linear-gradient(300deg, #B19EEF, transparent 30%),
+    linear-gradient(60deg, #FF9FFC, transparent 30%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: borderShift 6s linear infinite;
+}
+
+@keyframes borderShift {
+  0% {
+    background-position: 0% 50%, 0% 50%, 0% 50%, 0 0;
+  }
+
+  50% {
+    background-position: 100% 50%, 50% 50%, 30% 50%, 0 0;
+  }
+
+  100% {
+    background-position: 0% 50%, 0% 50%, 0% 50%, 0 0;
+  }
+}
+
+/* ===================== Reviews (Google-style) ===================== */
+.glass-tint {
+  background: radial-gradient(1200px 400px at 60% 120%, rgba(96, 71, 255, 0.12), transparent 60%),
+    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.review-card {
+  position: relative;
+  padding: 1rem 1.1rem 1.1rem;
+}
+
+@media (min-width:768px) {
+  .review-card {
+    padding: 1.1rem 1.25rem 1.25rem;
+  }
+}
+
+.avatar-pill {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #0B0B0F;
+  background: conic-gradient(from 180deg, #5B8CFF, #FF9FFC, #B19EEF, #5B8CFF);
+}
+
+.verify-dot {
+  display: inline-block;
+  font-size: .725rem;
+  line-height: 1;
+  color: #7DD3FC;
+  background: rgba(125, 211, 252, .15);
+  border: 1px solid rgba(125, 211, 252, .35);
+  border-radius: 9999px;
+  padding: .05rem .3rem;
+  transform: translateY(-1px);
+}
+
+.stars {
+  letter-spacing: .15rem;
+  background: linear-gradient(90deg, #FFD166, #FFE29A);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 8px rgba(255, 209, 102, .25);
+  font-size: 1rem;
+}
+
+/* Review text */
+.review-quote {
+  @apply text-white/90 leading-relaxed;
+  font-size: 0.95rem;
+}
+
+@media (min-width:768px) {
+  .review-quote {
+    font-size: 1.05rem;
+  }
+}
+
+/* Google wordmark (simple colored letters) */
+.google-g {
+  color: #4285F4;
+  font-weight: 800;
+}
+
+.google-o1 {
+  color: #EA4335;
+  font-weight: 800;
+}
+
+.google-o2 {
+  color: #FBBC05;
+  font-weight: 800;
+}
+
+.google-l {
+  color: #34A853;
+  font-weight: 800;
+}
+
+.google-e {
+  color: #EA4335;
+  font-weight: 800;
+}
+
+/* Outer (row) arrows, centered vertically across the three cards */
+.review-arrow-outer {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  height: 42px;
+  width: 42px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 24px;
+  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+}
+
+.review-arrow-outer:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Dots are already styled in the page using Tailwind utilities */
+
+/* ===================== Modal panel ===================== */
+.modal-panel {
+  @apply w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl p-6;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 25px 80px rgba(0, 0, 0, 0.45);
 }
