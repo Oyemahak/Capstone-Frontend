@@ -1,6 +1,14 @@
 // src/lib/api.js
-export const API_BASE =
-  (import.meta.env.VITE_API_BASE?.replace(/\/$/, "") || "http://localhost:4000/api");
+
+// Resolve API base once:
+// 1) Prefer VITE_API_BASE if provided (Render, custom URL, etc.)
+// 2) Else: in dev -> http://localhost:4000/api
+// 3) Else: in prod -> same-origin "/api" (works on Vercel if you ever proxy)
+const IS_DEV = import.meta.env?.DEV === true;
+export const API_BASE = (
+  import.meta.env?.VITE_API_BASE?.replace(/\/$/, "") ||
+  (IS_DEV ? "http://localhost:4000/api" : "/api")
+);
 
 /** Resolve the API root (without /api) for /health pings */
 function apiRoot() {
@@ -82,6 +90,7 @@ export const auth = {
     try {
       return await http("/auth/register", { method: "POST", body: payload });
     } catch (e) {
+      // legacy fallback if /auth/register not mounted in some env
       if (e?.status === 404) return http("/register", { method: "POST", body: payload });
       throw e;
     }
@@ -100,14 +109,12 @@ export const admin = {
   stats: () => http("/admin/stats"),
 };
 
-// (rest unchanged)
 export const projects = {
   list: () => http("/projects"),
   one: (id) => http(`/projects/${id}`),
   create: (payload) => http("/projects", { method: "POST", body: payload }),
   update: (id, payload) => http(`/projects/${id}`, { method: "PATCH", body: payload }),
   remove: (id) => http(`/projects/${id}`, { method: "DELETE" }),
-
   // NEW: add evidence entry; body = { title, links, images, ts }
   addEvidence: (id, entry) => http(`/projects/${id}/evidence`, { method: "POST", body: entry }),
 };
@@ -143,7 +150,7 @@ export const rooms = {
     }),
 };
 
-/* ---------- Requirements (unchanged from your working version) ---------- */
+/* ---------- Requirements ---------- */
 export const requirements = {
   get: (projectId) => http(`/projects/${projectId}/requirements`),
   async upsert(projectId, payload) {

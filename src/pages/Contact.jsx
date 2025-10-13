@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
+import { FORMS_BASE } from "@/lib/forms.js";
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -23,8 +24,7 @@ export default function Contact() {
 
     try {
       setSubmitting(true);
-      // Call your Vercel serverless function (same origin)
-      const res = await fetch("/api/contact", {
+      const res = await fetch(`${FORMS_BASE}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message }),
@@ -85,7 +85,6 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Inline CTA */}
         <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto] gap-4 items-center">
           <div>
             <h3 className="text-2xl font-black">Have a project in mind?</h3>

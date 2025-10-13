@@ -1,37 +1,56 @@
 // Vercel Serverless Function: /api/contact
-// Sends a contact email via Resend. No auth. Rate-limited by simple cooldown.
-
-import { Resend } from 'resend';
-
+import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// basic 15s per-IP cooldown (in-memory per instance)
+// Simple 15s per-IP cooldown
 const hits = new Map();
 function rateLimited(ip) {
-    const now = Date.now();
-    const last = hits.get(ip) || 0;
-    hits.set(ip, now);
-    return now - last < 15000; // 15s
+  const now = Date.now();
+  const last = hits.get(ip) || 0;
+  hits.set(ip, now);
+  return now - last < 15000;
 }
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const headers = {
+    "Access-Control-Allow-Origin": "*", // dev: allow localhost to hit prod function
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
 
-    try {
-        const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket.remoteAddress || 'unknown';
-        if (rateLimited(ip)) return res.status(429).json({ error: 'Too many requests, please wait a moment.' });
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, headers);
+    return res.end();
+  }
+  if (req.method !== "POST") {
+    res.writeHead(405, headers);
+    return res.end(JSON.stringify({ error: "Method not allowed" }));
+  }
 
-        const { name = '', email = '', message = '', _hp } = req.body || {};
-        if (_hp) return res.status(200).json({ ok: true }); // honeypot -> silently accept
+  try {
+    const ip =
+      (req.headers["x-forwarded-for"] || "").split(",")[0] ||
+      req.socket?.remoteAddress ||
+      "unknown";
+    if (rateLimited(ip)) {
+      res.writeHead(429, headers);
+      return res.end(JSON.stringify({ error: "Too many requests, please wait a moment." }));
+    }
 
-        if (!name.trim() || !email.trim() || !message.trim()) {
-            return res.status(400).json({ error: 'Please fill out all fields.' });
-        }
+    const { name = "", email = "", message = "", _hp } = req.body || {};
+    if (_hp) {
+      res.writeHead(200, headers);
+      return res.end(JSON.stringify({ ok: true }));
+    }
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      res.writeHead(400, headers);
+      return res.end(JSON.stringify({ error: "Please fill out all fields." }));
+    }
 
-        const to = process.env.FORMS_TO_EMAIL;   // where YOU receive the email
-        const from = process.env.FORMS_FROM_EMAIL || 'MSPixelPulse <no-reply@mspixelpulse.com>';
+    const to = process.env.FORMS_TO_EMAIL;
+    const from = process.env.FORMS_FROM_EMAIL || "MSPixelPulse <no-reply@mspixelpulse.com>";
 
-        const pretty = `
+    const pretty = `
 New Website Inquiry
 
 Name: ${name}
@@ -42,7 +61,7 @@ ${message}
 IP: ${ip}
     `.trim();
 
-        const html = `
+    const html = `
       <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.6">
         <h2 style="margin:0 0 8px">New Website Inquiry</h2>
         <p><strong>Name:</strong> ${escapeHTML(name)}</p>
@@ -53,21 +72,27 @@ IP: ${ip}
       </div>
     `;
 
-        await resend.emails.send({
-            from,
-            to,
-            subject: `New contact: ${name}`,
-            text: pretty,
-            html,
-            reply_to: email, // so you can hit reply
-        });
+    await resend.emails.send({
+      from,
+      to,
+      subject: `New contact: ${name}`,
+      text: pretty,
+      html,
+      reply_to: email,
+    });
 
-        return res.status(201).json({ ok: true, message: 'Sent' });
-    } catch (err) {
-        console.error('[contact] send error:', err);
-        return res.status(500).json({ error: 'Failed to send message. Please try again later.' });
-    }
+    res.writeHead(201, headers);
+    return res.end(JSON.stringify({ ok: true, message: "Sent" }));
+  } catch (err) {
+    console.error("[contact] send error:", err);
+    res.writeHead(500, headers);
+    return res.end(JSON.stringify({ error: "Failed to send message. Please try again later." }));
+  }
 }
 
-function escapeHTML(s = '') { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
-function escapeAttr(s = '') { return escapeHTML(s).replace(/"/g, '&quot;'); }
+function escapeHTML(s = "") {
+  return String(s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+function escapeAttr(s = "") {
+  return escapeHTML(s).replace(/"/g, "&quot;");
+}

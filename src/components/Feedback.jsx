@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Container from "@/components/layout/Container.jsx";
 import SectionTitle from "@/components/SectionTitle.jsx";
+import { FORMS_BASE } from "@/lib/forms.js";
 
 /** Always-visible local testimonials (3+) */
 const FALLBACK = [
@@ -34,7 +35,13 @@ export default function Feedback() {
 
   // modal state
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", business: "", subject: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    business: "",
+    subject: "",
+    message: "",
+  });
   const [sending, setSending] = useState(false);
   const [note, setNote] = useState("");
 
@@ -81,18 +88,24 @@ export default function Feedback() {
       return;
     }
 
+    // fold business + subject into the message so the API doesn’t need changes
+    const payloadMessage =
+      `New Feedback\n\n` +
+      `From: ${name.trim()}\n` +
+      `Email: ${email.trim()}\n` +
+      `Business: ${business.trim()}\n` +
+      (subject.trim() ? `Subject: ${subject.trim()}\n` : "") +
+      `\nMessage:\n${message.trim()}`;
+
     try {
       setSending(true);
-      // ⬇️ call your Vercel function (no API_BASE)
-      const res = await fetch("/api/feedback", {
+      const res = await fetch(`${FORMS_BASE}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
-          business: business.trim(),
-          subject: subject.trim() || "Website feedback",
-          message: message.trim(),
+          message: payloadMessage,
         }),
       });
       const data = await res.json().catch(() => ({}));
