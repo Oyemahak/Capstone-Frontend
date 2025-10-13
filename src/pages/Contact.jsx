@@ -1,9 +1,7 @@
-// frontend/src/pages/Contact.jsx
+// src/pages/Contact.jsx
 import { useState } from "react";
 import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
-
-const API_BASE = import.meta.env.VITE_API_BASE?.replace(/\/+$/, "");
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -13,19 +11,28 @@ export default function Contact() {
   async function submit(e) {
     e.preventDefault();
     setNote("");
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const message = form.message.trim();
+
+    if (!name || !email || !message) {
       setNote("Please fill out all fields.");
       return;
     }
+
     try {
       setSubmitting(true);
-      const res = await fetch(`${API_BASE}/contact`, {
+      // Call your Vercel serverless function (same origin)
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ name, email, message }),
       });
-      const data = await res.json();
+
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || data?.message || "Failed to send");
+
       setNote("Thanks! Your message was sent. Please check your inbox.");
       setForm({ name: "", email: "", message: "" });
     } catch (err) {
@@ -38,11 +45,7 @@ export default function Contact() {
   return (
     <section className="section">
       <Container>
-        <SectionTitle
-          eyebrow="Contact"
-          title="Tell us about your project"
-          align="left"
-        />
+        <SectionTitle eyebrow="Contact" title="Tell us about your project" align="left" />
         <div className="grid md:grid-cols-2 gap-6">
           <form className="space-y-3" onSubmit={submit}>
             <input
@@ -68,9 +71,7 @@ export default function Contact() {
               <button className="btn btn-primary" disabled={submitting}>
                 {submitting ? "Sending…" : "Send message"}
               </button>
-              {note && (
-                <div className="text-sm text-white/70">{note}</div>
-              )}
+              {note && <div className="text-sm text-white/70">{note}</div>}
             </div>
           </form>
 
@@ -83,6 +84,7 @@ export default function Contact() {
             </ul>
           </div>
         </div>
+
         {/* Inline CTA */}
         <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto] gap-4 items-center">
           <div>
