@@ -1,4 +1,6 @@
 // src/components/portal/PortalShell.jsx
+import "@/portals/css/portal.css"; // ← load portal-only styles
+
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
@@ -20,7 +22,7 @@ export default function PortalShell({ children }) {
       { to: "/dev", label: "Dashboard", end: true },
       { to: "/dev/projects", label: "Projects" },
       { to: "/dev/discussions", label: "Discussions" },
-      { to: "/dev/direct", label: "Direct" },          // ← NEW
+      { to: "/dev/direct", label: "Direct" },
       { to: "/dev/team", label: "Team" },
       { to: "/dev/settings", label: "Settings" },
     ],
@@ -36,7 +38,10 @@ export default function PortalShell({ children }) {
 
   const links = navs[role] || [];
   const itemClass = ({ isActive }) =>
-    ["block px-4 py-2 rounded-lg font-semibold", isActive ? "bg-white/10" : "hover:bg-white/5"].join(" ");
+    [
+      "block px-4 py-2 rounded-lg font-semibold",
+      isActive ? "bg-white/10" : "hover:bg-white/5",
+    ].join(" ");
 
   return (
     <div className="container-edge grid grid-cols-12 gap-6 py-6">
