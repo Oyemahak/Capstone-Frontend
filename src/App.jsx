@@ -14,6 +14,7 @@ const Pricing       = lazy(() => import("./pages/Pricing.jsx"));
 const Contact       = lazy(() => import("./pages/Contact.jsx"));
 const Login         = lazy(() => import("./pages/auth/Login.jsx"));
 const Register      = lazy(() => import("./pages/auth/Register.jsx"));
+const NotFound      = lazy(() => import("./pages/NotFound.jsx")); // 👈 added
 
 /** Portals */
 const AdminPortal  = lazy(() => import("@/portals/admin/index.jsx"));
@@ -114,8 +115,8 @@ export default function App() {
               <Route path="/client/*" element={<ClientPortal />} />
             </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 404 fallback — must be LAST */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </main>
