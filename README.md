@@ -71,7 +71,7 @@ npm run build
 
 ## Deployment
 The frontend is deployed on Vercel:
-👉 https://mspixelplus.vercel.app
+👉 https://mspixelpulse.vercel.app
 
 ---
 
