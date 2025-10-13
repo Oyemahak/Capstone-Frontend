@@ -1,9 +1,7 @@
+// src/components/Feedback.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import Container from "@/components/layout/Container.jsx";
 import SectionTitle from "@/components/SectionTitle.jsx";
-
-const API_BASE =
-  import.meta.env.VITE_API_BASE?.replace(/\/+$/, "") || "http://localhost:4000/api";
 
 /** Always-visible local testimonials (3+) */
 const FALLBACK = [
@@ -36,7 +34,7 @@ export default function Feedback() {
 
   // modal state
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", business: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", business: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
   const [note, setNote] = useState("");
 
@@ -77,30 +75,30 @@ export default function Feedback() {
     e.preventDefault();
     setNote("");
 
-    const { name, email, business, message } = form;
+    const { name, email, business, subject, message } = form;
     if (!name.trim() || !email.trim() || !business.trim() || !message.trim()) {
       setNote("Please fill out all fields.");
       return;
     }
 
-    // Same endpoint & shape as Contact page
-    const payload = {
-      name: name.trim(),
-      email: email.trim(), // backend will set reply-to; you’ll get their address
-      message: `New Website Feedback\n\nFrom: ${name.trim()}\nEmail: ${email.trim()}\nBusiness: ${business.trim()}\n\nMessage:\n${message.trim()}`,
-    };
-
     try {
       setSending(true);
-      const res = await fetch(`${API_BASE}/contact`, {
+      // ⬇️ call your Vercel function (no API_BASE)
+      const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          business: business.trim(),
+          subject: subject.trim() || "Website feedback",
+          message: message.trim(),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || data?.message || "Failed to send");
       setNote("Thanks! Your feedback was emailed to us.");
-      setForm({ name: "", email: "", business: "", message: "" });
+      setForm({ name: "", email: "", business: "", subject: "", message: "" });
       setTimeout(() => setOpen(false), 900);
     } catch (err) {
       setNote(err.message || "Could not send right now. Please email us directly.");
@@ -132,27 +130,14 @@ export default function Feedback() {
                     {String(t.name || "C").trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="leading-tight">
-                    <div className="font-semibold flex items-center gap-1">
-                      {t.name} <span className="verify-dot">✓</span>
-                    </div>
-                    <div className="text-muted-xs">{t.business}</div>
+                    <div className="font-semibold flex items-center gap-1">{t.name}</div>
+                    <div className="text-white/60 text-xs">{t.business}</div>
                   </div>
                 </div>
 
-                <div className="stars" aria-hidden>
-                  ★★★★★
-                </div>
+                <div className="stars" aria-hidden>★★★★★</div>
 
                 <blockquote className="review-quote mt-2">“{t.message}”</blockquote>
-
-                <div className="mt-3 text-xs opacity-70">
-                  <span className="google-g">G</span>
-                  <span className="google-o1">o</span>
-                  <span className="google-o2">o</span>
-                  <span className="google-g">g</span>
-                  <span className="google-l">l</span>
-                  <span className="google-e">e</span> reviews
-                </div>
               </figure>
             ))}
           </div>
@@ -218,6 +203,12 @@ export default function Feedback() {
                 placeholder="Business / Organization"
                 value={form.business}
                 onChange={(e) => setForm((s) => ({ ...s, business: e.target.value }))}
+              />
+              <input
+                className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                placeholder="Subject (optional)"
+                value={form.subject}
+                onChange={(e) => setForm((s) => ({ ...s, subject: e.target.value }))}
               />
               <textarea
                 rows={5}

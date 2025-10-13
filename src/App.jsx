@@ -1,10 +1,9 @@
 // src/App.jsx
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import AppHeader from "./components/layout/AppHeader.jsx";
 import AppFooter from "./components/layout/AppFooter.jsx";
 import { useAuth } from "@/context/AuthContext.jsx";
-import { ensureAwake } from "@/lib/api.js";
 
 /** Public pages */
 const Home          = lazy(() => import("./pages/Home.jsx"));
@@ -21,7 +20,7 @@ const AdminPortal  = lazy(() => import("@/portals/admin/index.jsx"));
 const ClientPortal = lazy(() => import("@/portals/client/index.jsx"));
 const DevPortal    = lazy(() => import("@/portals/dev/index.jsx"));
 
-/** Optional */
+/** Optional utilities */
 const DebugConnection = lazy(() => import("./pages/DebugConnection.jsx"));
 
 function ScrollToTop() {
@@ -63,18 +62,6 @@ function ProtectedLayout() {
 }
 
 export default function App() {
-  // NEW: wake the backend once on first visit and show a tiny banner
-  const [warming, setWarming] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try { await ensureAwake(); } catch {}
-      if (alive) setWarming(false);
-    })();
-    return () => { alive = false; };
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-transparent text-textMain">
       <AppHeader />
@@ -132,6 +119,7 @@ export default function App() {
           </Routes>
         </Suspense>
       </main>
+
       <AppFooter />
     </div>
   );
