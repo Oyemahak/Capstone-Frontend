@@ -1,10 +1,9 @@
-// src/components/Feedback.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Container from "@/components/layout/Container.jsx";
 import SectionTitle from "@/components/SectionTitle.jsx";
 import { FORMS_BASE } from "@/lib/forms.js";
 
-/** Always-visible local testimonials (3+) */
+/** Testimonials (added 3 more: 1 Canadian, 2 Indian) */
 const FALLBACK = [
   {
     name: "Sukhdeep Brar",
@@ -24,16 +23,45 @@ const FALLBACK = [
     message:
       "Professional and friendly from day one. Patients can find services quickly and contact us without friction.",
   },
+  {
+    name: "Avery Thompson",
+    business: "Owner, Maple & Pine Studio (Canada)",
+    message:
+      "A polished build with great attention to detail. Performance and accessibility were genuinely impressive.",
+  },
+  {
+    name: "Rohit Sharma",
+    business: "Founder, PixelForge India",
+    message:
+      "Clear communication, quick iterations, and a premium UI. Exactly what our brand needed to stand out.",
+  },
+  {
+    name: "Ananya Iyer",
+    business: "Marketing Lead, Trident Tech",
+    message:
+      "From kickoff to launch, everything was smooth. The CMS handoff made it simple for our team to manage.",
+  },
 ];
 
 export default function Feedback() {
   const [items] = useState(FALLBACK);
-
-  // carousel state
   const [idx, setIdx] = useState(0);
-  const auto = useRef(null);
 
-  // modal state
+  // manual prev/next only (no autoplay)
+  const prev = () => setIdx((i) => (i - 1 + items.length) % items.length);
+  const next = () => setIdx((i) => (i + 1) % items.length);
+
+  // 3-up window like Google reviews
+  const trio = useMemo(() => {
+    if (!items.length) return [];
+    return [
+      items[(idx + 0) % items.length],
+      items[(idx + 1) % items.length],
+      items[(idx + 2) % items.length],
+    ];
+  }, [items, idx]);
+
+  // modal state (unchanged)
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -45,39 +73,6 @@ export default function Feedback() {
   const [sending, setSending] = useState(false);
   const [note, setNote] = useState("");
 
-  // autoplay (6s)
-  useEffect(() => {
-    stop();
-    auto.current = setInterval(
-      () => setIdx((i) => (i + 1) % Math.max(1, items.length)),
-      6000
-    );
-    return stop;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items]);
-
-  function stop() {
-    if (auto.current) clearInterval(auto.current);
-    auto.current = null;
-  }
-  function prev() {
-    stop();
-    setIdx((i) => (i - 1 + items.length) % items.length);
-  }
-  function next() {
-    stop();
-    setIdx((i) => (i + 1) % items.length);
-  }
-
-  // 3-up window like Google reviews
-  const trio = useMemo(() => {
-    if (!items.length) return [];
-    const a = items[(idx + 0) % items.length];
-    const b = items[(idx + 1) % items.length];
-    const c = items[(idx + 2) % items.length];
-    return [a, b, c];
-  }, [items, idx]);
-
   async function submit(e) {
     e.preventDefault();
     setNote("");
@@ -88,7 +83,7 @@ export default function Feedback() {
       return;
     }
 
-    // fold business + subject into the message so the API doesn’t need changes
+    // Fold business + subject into message so API stays the same
     const payloadMessage =
       `New Feedback\n\n` +
       `From: ${name.trim()}\n` +
@@ -125,17 +120,29 @@ export default function Feedback() {
       <Container>
         <SectionTitle eyebrow="Feedback" title="What clients say" centered />
 
-        <div className="relative">
-          {/* Outer arrows (centered vertically across the row) */}
-          <button aria-label="Previous" onClick={prev} className="review-arrow-outer left-0">
+        {/* FRAME: fixed width so arrows sit outside without changing page width */}
+        <div className="relative mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
+
+          {/* Arrows: outside the row, vertically centered; hidden on small screens */}
+          <button
+            type="button"
+            aria-label="Previous"
+            onClick={prev}
+            className="review-arrow review-arrow--left hidden md:grid"
+          >
             ‹
           </button>
-          <button aria-label="Next" onClick={next} className="review-arrow-outer right-0">
+          <button
+            type="button"
+            aria-label="Next"
+            onClick={next}
+            className="review-arrow review-arrow--right hidden md:grid"
+          >
             ›
           </button>
 
-          {/* Three cards same width as other grids */}
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Cards */}
+          <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
             {trio.map((t, i) => (
               <figure key={`${t.name}-${i}`} className="review-card glass-tint">
                 <div className="flex items-center gap-3 mb-3">
@@ -143,12 +150,16 @@ export default function Feedback() {
                     {String(t.name || "C").trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="leading-tight">
-                    <div className="font-semibold flex items-center gap-1">{t.name}</div>
+                    <div className="font-semibold flex items-center gap-1">
+                      {t.name}
+                    </div>
                     <div className="text-white/60 text-xs">{t.business}</div>
                   </div>
                 </div>
 
-                <div className="stars" aria-hidden>★★★★★</div>
+                <div className="stars" aria-hidden>
+                  ★★★★★
+                </div>
 
                 <blockquote className="review-quote mt-2">“{t.message}”</blockquote>
               </figure>
@@ -160,10 +171,7 @@ export default function Feedback() {
             {items.map((_, i) => (
               <button
                 key={i}
-                onClick={() => {
-                  stop();
-                  setIdx(i);
-                }}
+                onClick={() => setIdx(i)}
                 className={[
                   "h-2.5 w-2.5 rounded-full transition",
                   i === idx ? "bg-white/90" : "bg-white/30 hover:bg-white/50",
@@ -181,6 +189,7 @@ export default function Feedback() {
                 setOpen(true);
               }}
               className="btn btn-outline"
+              type="button"
             >
               Leave a review
             </button>
@@ -196,7 +205,9 @@ export default function Feedback() {
         >
           <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
             <div className="font-black text-lg">Share your feedback</div>
-            <p className="text-textSub text-sm mt-1">Your message will be emailed to us.</p>
+            <p className="text-textSub text-sm mt-1">
+              Your message will be emailed to us.
+            </p>
 
             <form className="mt-4 space-y-3" onSubmit={submit}>
               <input
@@ -233,7 +244,11 @@ export default function Feedback() {
               {note && <div className="text-sm text-white/80">{note}</div>}
 
               <div className="form-actions justify-end">
-                <button type="button" onClick={() => setOpen(false)} className="btn btn-outline">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="btn btn-outline"
+                >
                   Cancel
                 </button>
                 <button className="btn btn-primary" disabled={sending}>

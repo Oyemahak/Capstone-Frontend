@@ -435,3 +435,46 @@ textarea,
     transform: translateX(100%) rotate(25deg);
   }
 }
+
+/* Arrow buttons hugging the content width */
+.review-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 24px;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+}
+
+/* Nudge OUTSIDE the frame edges without changing layout width */
+.review-arrow--left  { left: 0; top:104px; transform: translate(-50%, -50%); }
+.review-arrow--right { right: 0; top:104px; transform: translate( 50%, -50%); }
+
+.review-arrow:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.review-arrow--right:hover {
+  transform: translate(50%, -50%) scale(1.05);
+}
+.review-arrow:active {
+  transform: translate(-50%, -50%) scale(0.98);
+}
+.review-arrow--right:active {
+  transform: translate(50%, -50%) scale(0.98);
+}
+
+/* Optional: ensure cards don't push arrows around on tiny screens */
+@media (max-width: 767px) {
+  .review-arrow { display: none; }
+}
