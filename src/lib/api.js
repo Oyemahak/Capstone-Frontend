@@ -80,6 +80,14 @@ async function http(path, { method = "GET", body, headers } = {}) {
   return data;
 }
 
+function qs(obj = {}) {
+  const s = Object.entries(obj)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+  return s ? `?${s}` : "";
+}
+
 /* ---------- High-level helpers ---------- */
 export const auth = {
   login: (email, password) =>
@@ -115,8 +123,14 @@ export const projects = {
   create: (payload) => http("/projects", { method: "POST", body: payload }),
   update: (id, payload) => http(`/projects/${id}`, { method: "PATCH", body: payload }),
   remove: (id) => http(`/projects/${id}`, { method: "DELETE" }),
-  // NEW: add evidence entry; body = { title, links, images, ts }
+
+  // Evidence: dedicated endpoint
   addEvidence: (id, entry) => http(`/projects/${id}/evidence`, { method: "POST", body: entry }),
+
+  // Announcements: list/create/delete (index-based delete per backend)
+  listAnnouncements: (id) => http(`/projects/${id}/announcements`),            // { ok, items }
+  createAnnouncement: (id, payload) => http(`/projects/${id}/announcements`, { method: "POST", body: payload }),
+  deleteAnnouncement: (id, idx) => http(`/projects/${id}/announcements/${idx}`, { method: "DELETE" }),
 };
 
 export const debug = {
@@ -161,10 +175,10 @@ export const requirements = {
     fd.append("pages", JSON.stringify(payload.pages || []));
     if (payload.files?.logo)  fd.append("logo",  payload.files.logo);
     if (payload.files?.brief) fd.append("brief", payload.files.brief);
-    (payload.files?.supporting || []).forEach((f) => fd.append("supporting[]", f));
+    (payload.files?.supporting || []).forEach((f) => fd.append("supporting", f));
     if (payload.files?.pageFiles) {
       for (const [name, list] of Object.entries(payload.files.pageFiles)) {
-        (list || []).forEach((f) => fd.append(`pageFiles[${name}][]`, f));
+        (list || []).forEach((f) => fd.append(`pageFiles[${name}]`, f));
       }
     }
     const res = await fetch(`${API_BASE}/projects/${projectId}/requirements`, {
@@ -219,11 +233,3 @@ export const invoices = {
   remove: (projectId, invoiceId) =>
     http(`/projects/${projectId}/invoices/${invoiceId}`, { method: "DELETE" }),
 };
-
-function qs(obj = {}) {
-  const s = Object.entries(obj)
-    .filter(([, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join("&");
-  return s ? `?${s}` : "";
-}

@@ -1,15 +1,20 @@
+// frontend/src/portals/dev/ProjectDetail.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { projects as api, requirements as reqApi, files as fileApi } from "@/lib/api.js";
+import {
+  projects as api,
+  requirements as reqApi,
+  files as fileApi,
+} from "@/lib/api.js";
 
 export default function DevProjectDetail() {
   const { projectId } = useParams();
 
   const [project, setProject] = useState(null);
-  const [fatalErr, setFatalErr] = useState("");          // only truly blocking errors
-  const [tab, setTab] = useState("overview");            // overview | requirements | updates | evidence | chat
+  const [fatalErr, setFatalErr] = useState("");
+  const [tab, setTab] = useState("overview"); // overview | requirements | updates | evidence
 
-  // Requirements (read-only) + error isolated to this tab
+  // Requirements (read-only)
   const [reqSnap, setReqSnap] = useState(null);
   const [reqBusy, setReqBusy] = useState(false);
   const [reqErr, setReqErr] = useState("");
@@ -28,100 +33,88 @@ export default function DevProjectDetail() {
     }
   }
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const p = await api.one(projectId);
-        setProject(p.project || p);
-      } catch (e) {
-        setFatalErr(e.message || "Failed to load project");
-      }
-    })();
-    loadReq();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
-
-  const clientName = useMemo(() => project?.client?.name || "—", [project]);
-
-  /* ---------- Announcements (still local-only for now) ---------- */
-  const [announcements, setAnn] = useState([]);
+  // Announcements
+  const [announcements, setAnnouncements] = useState([]);
+  const [aBusy, setABusy] = useState(false);
+  const [aErr, setAErr] = useState("");
   const [titleA, setTitleA] = useState("");
   const [bodyA, setBodyA] = useState("");
-  function addAnnouncement() {
-    if (!titleA.trim()) return;
-    const item = { title: titleA.trim(), body: bodyA.trim(), ts: Date.now() };
-    setAnn((prev) => [item, ...prev]);
-    setTitleA(""); setBodyA("");
+
+  async function loadAnnouncements() {
+    setAErr("");
+    try {
+      const d = await api.listAnnouncements(projectId); // { ok, items }
+      setAnnouncements(d.items || []);
+    } catch (e) {
+      setAErr(e?.message || "Failed to load announcements");
+    }
   }
 
-  /* ---------- Evidence (persisted to backend) ---------- */
+  async function publishAnnouncement() {
+    if (!titleA.trim()) return;
+    setABusy(true);
+    setAErr("");
+    try {
+      await api.createAnnouncement(projectId, { title: titleA.trim(), body: bodyA.trim() });
+      setTitleA("");
+      setBodyA("");
+      await loadAnnouncements();
+    } catch (e) {
+      setAErr(e?.message || "Failed to publish");
+    } finally {
+      setABusy(false);
+    }
+  }
+
+  // Evidence
   const [evTitle, setEvTitle] = useState("");
   const [evLink, setEvLink] = useState("");
-  const [evFiles, setEvFiles] = useState([]);        // File[]
+  const [evFiles, setEvFiles] = useState([]);
   const [evBusy, setEvBusy] = useState(false);
   const [evErr, setEvErr] = useState("");
   const [evOk, setEvOk] = useState("");
 
   const pickInputId = "dev-ev-files";
-
   function onPickFiles(e) {
-    const incoming = Array.from(e.target.files || []);
-    if (!incoming.length) return;
-    // filter images + light size guard (15MB)
-    const accepted = incoming.filter(
-      (f) => f.type.startsWith("image/") && f.size <= 15 * 1024 * 1024
-    );
-    if (accepted.length !== incoming.length) {
-      alert("Some files were skipped (only images up to 15MB are allowed).");
-    }
+    const files = Array.from(e.target.files || []);
+    const accepted = files.filter((f) => f.type.startsWith("image/") && f.size <= 15 * 1024 * 1024);
+    if (accepted.length !== files.length) alert("Only images up to 15MB are allowed.");
     setEvFiles((prev) => [...prev, ...accepted].slice(0, 12));
-    // allow picking same file again
     e.target.value = "";
   }
-
-  function removePicked(idx) {
-    const next = evFiles.slice();
-    next.splice(idx, 1);
-    setEvFiles(next);
+  function removePicked(i) {
+    const copy = evFiles.slice();
+    copy.splice(i, 1);
+    setEvFiles(copy);
   }
 
   async function addProgress() {
     setEvErr("");
     if (!evTitle.trim() && !evLink.trim() && evFiles.length === 0) return;
-
     try {
       setEvBusy(true);
-
-      // 1) Upload images to your /api/files/upload endpoint (Supabase behind the scenes)
+      // upload images to storage
       const uploaded = [];
       for (const f of evFiles) {
-        const up = await fileApi.upload(f); // -> { file: { name,type,size,path,url } }
+        const up = await fileApi.upload(f);
         uploaded.push({
           name: up.file?.name || f.name,
           type: up.file?.type || f.type,
           url: up.file?.url,
         });
       }
-
-      // 2) Construct entry
-      const entry = {
+      // persist via dedicated endpoint
+      await api.addEvidence(projectId, {
         title: evTitle.trim() || "Update",
         links: evLink.trim() ? [evLink.trim()] : [],
-        images: uploaded, // [{name,type,url}]
+        images: uploaded,
         ts: Date.now(),
-      };
-
-      // 3) Save to project.evidence on the backend (full array replace is simplest)
-      const current = Array.isArray(project?.evidence) ? project.evidence : [];
-      const nextEvidence = [entry, ...current];
-      const saved = await api.update(projectId, { evidence: nextEvidence });
-      const savedProject = saved.project || saved;
-
-      setProject(savedProject);
+      });
+      // reload project to reflect fresh timeline
+      const p = await api.one(projectId);
+      setProject(p.project || p);
       setEvOk("Entry added");
       setTimeout(() => setEvOk(""), 1000);
-
-      // 4) reset form
       setEvTitle("");
       setEvLink("");
       setEvFiles([]);
@@ -132,42 +125,49 @@ export default function DevProjectDetail() {
     }
   }
 
-  /* ---------- Chat (kept local-only for now) ---------- */
-  const [chat, setChat] = useState([]);
-  const [msg, setMsg] = useState("");
-  function sendMessage(from = "developer") {
-    if (!msg.trim()) return;
-    setChat((prev) => [...prev, { from, text: msg.trim(), ts: Date.now() }]);
-    setMsg("");
-  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await api.one(projectId);
+        setProject(p.project || p);
+      } catch (e) {
+        setFatalErr(e.message || "Failed to load project");
+      }
+    })();
+    loadReq();
+    loadAnnouncements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const clientName = useMemo(() => project?.client?.name || "—", [project]);
 
   if (!project) {
-    return <div className="page-shell">{fatalErr ? <div className="text-error">{fatalErr}</div> : "Loading…"}</div>;
+    return (
+      <div className="page-shell">
+        {fatalErr ? <div className="text-error">{fatalErr}</div> : "Loading…"}
+      </div>
+    );
   }
 
   return (
     <div className="page-shell space-y-5">
       <div className="page-header">
         <h2 className="page-title">Project · {project.title}</h2>
-        {/* READ-ONLY status badge for devs */}
         <div className="flex items-center gap-2">
           <span className="badge capitalize">{project.status || "draft"}</span>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — Chat removed */}
       <div className="card-surface p-3">
         <div className="flex gap-2">
-          {["overview","requirements","updates","evidence","chat"].map(k => (
+          {["overview", "requirements", "updates", "evidence"].map((k) => (
             <button
               key={k}
               className={`btn h-10 px-4 rounded-lg ${tab === k ? "btn-primary" : "btn-outline"}`}
               onClick={() => setTab(k)}
             >
-              {k === "overview" ? "Overview" :
-               k === "requirements" ? "Requirements" :
-               k === "updates" ? "Announcements" :
-               k === "evidence" ? "Evidence" : "Chat"}
+              {k === "overview" ? "Overview" : k === "requirements" ? "Requirements" : k === "updates" ? "Announcements" : "Evidence"}
             </button>
           ))}
         </div>
@@ -183,15 +183,15 @@ export default function DevProjectDetail() {
           </div>
 
           <div className="card-surface card-pad">
-            <div className="card-title mb-2">Latest activity</div>
+            <div className="card-title mb-2">Latest announcements</div>
             <ul className="space-stack text-sm">
-              {(announcements.slice(0,3)).map((a, i) => (
+              {(announcements || []).slice(0, 3).map((a, i) => (
                 <li key={i} className="bg-white/5 rounded-xl p-3">
                   <div className="font-medium">{a.title}</div>
                   {a.body && <div className="text-muted mt-1">{a.body}</div>}
                 </li>
               ))}
-              {!announcements.length && <li className="text-muted-xs">No announcements yet.</li>}
+              {!(announcements || []).length && <li className="text-muted-xs">No announcements yet.</li>}
             </ul>
           </div>
         </div>
@@ -209,23 +209,23 @@ export default function DevProjectDetail() {
 
           {reqErr && <div className="text-error">{reqErr}</div>}
 
-          {!reqErr && !reqSnap && (
-            <div className="text-muted-xs">No requirements uploaded yet.</div>
-          )}
-
           {!reqErr && reqSnap && (
             <>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="row-sub">Logo</div>
                   {reqSnap.logo ? (
-                    <a className="subtle-link" href={reqSnap.logo.url} target="_blank" rel="noreferrer">{reqSnap.logo.name}</a>
+                    <a className="subtle-link" href={reqSnap.logo.url} target="_blank" rel="noreferrer">
+                      {reqSnap.logo.name}
+                    </a>
                   ) : "—"}
                 </div>
                 <div>
                   <div className="row-sub">Brief</div>
                   {reqSnap.brief ? (
-                    <a className="subtle-link" href={reqSnap.brief.url} target="_blank" rel="noreferrer">{reqSnap.brief.name}</a>
+                    <a className="subtle-link" href={reqSnap.brief.url} target="_blank" rel="noreferrer">
+                      {reqSnap.brief.name}
+                    </a>
                   ) : "—"}
                 </div>
               </div>
@@ -262,42 +262,48 @@ export default function DevProjectDetail() {
                 ) : "—"}
               </div>
 
-              <div className="text-muted-xs">Updated: {new Date(reqSnap.updatedAt).toLocaleString()}</div>
+              <div className="text-muted-xs">Updated: {reqSnap.updatedAt ? new Date(reqSnap.updatedAt).toLocaleString() : "—"}</div>
             </>
           )}
+
+          {!reqErr && !reqSnap && <div className="text-muted-xs">No requirements uploaded yet.</div>}
         </div>
       )}
 
-      {/* ANNOUNCEMENTS */}
+      {/* ANNOUNCEMENTS (dev can post) */}
       {tab === "updates" && (
         <div className="grid-2">
           <div className="card-surface card-pad space-stack">
             <div className="card-title">Post announcement</div>
-            <input className="form-input" placeholder="Title" value={titleA} onChange={(e)=>setTitleA(e.target.value)} />
-            <textarea className="form-textarea-sm" placeholder="What did you complete / plan?" value={bodyA} onChange={(e)=>setBodyA(e.target.value)} />
+            {aErr && <div className="text-error">{aErr}</div>}
+            <input className="form-input" placeholder="Title" value={titleA} onChange={(e) => setTitleA(e.target.value)} />
+            <textarea className="form-textarea-sm" placeholder="What did you complete / plan?" value={bodyA} onChange={(e) => setBodyA(e.target.value)} />
             <div className="form-actions">
-              <button className="btn btn-primary" onClick={addAnnouncement}>Publish</button>
+              <button className="btn btn-primary" onClick={publishAnnouncement} disabled={aBusy || !titleA.trim()}>
+                {aBusy ? "Publishing…" : "Publish"}
+              </button>
+              <button className="btn btn-outline" onClick={loadAnnouncements} disabled={aBusy}>Reload</button>
             </div>
-            <div className="text-muted-xs">Client and Admin can see these updates.</div>
+            <div className="text-muted-xs">Client & Admin can see these.</div>
           </div>
 
           <div className="card-surface card-pad">
             <div className="card-title mb-2">Recent announcements</div>
             <div className="space-stack">
-              {announcements.map((a,i)=>(
+              {(announcements || []).map((a, i) => (
                 <div key={i} className="bg-white/5 rounded-xl p-3">
                   <div className="font-extrabold">{a.title}</div>
                   {a.body && <div className="text-muted mt-1 whitespace-pre-wrap">{a.body}</div>}
                   <div className="text-muted-xs mt-1">{new Date(a.ts).toLocaleString()}</div>
                 </div>
               ))}
-              {!announcements.length && <div className="text-muted-xs">Nothing yet.</div>}
+              {!(announcements || []).length && <div className="text-muted-xs">Nothing yet.</div>}
             </div>
           </div>
         </div>
       )}
 
-      {/* EVIDENCE */}
+      {/* EVIDENCE (dev can post) */}
       {tab === "evidence" && (
         <div className="grid-2">
           <div className="card-surface card-pad space-stack">
@@ -310,19 +316,14 @@ export default function DevProjectDetail() {
               </div>
             )}
 
-            <input className="form-input" placeholder="Short title (e.g., 'Home page & Nav')" value={evTitle} onChange={(e)=>setEvTitle(e.target.value)} />
-            <input className="form-input" placeholder="Link (optional, e.g., staging URL)" value={evLink} onChange={(e)=>setEvLink(e.target.value)} />
+            <input className="form-input" placeholder="Short title (e.g., 'Home page & Nav')" value={evTitle} onChange={(e) => setEvTitle(e.target.value)} />
+            <input className="form-input" placeholder="Link (optional, e.g., staging URL)" value={evLink} onChange={(e) => setEvLink(e.target.value)} />
 
-            {/* Styled file picker */}
             <div className="space-y-2">
               <div className="form-label">Screenshots (PNG/JPG)</div>
               <input id={pickInputId} type="file" accept="image/*" multiple className="sr-only" onChange={onPickFiles} />
-              <label
-                htmlFor={pickInputId}
-                className="block rounded-xl border border-white/10 bg-white/5 p-5 text-center cursor-pointer hover:bg-white/10 transition-colors"
-              >
-                <div className="text-white/80 text-sm">Drag & drop or click to browse</div>
-                <div className="text-muted-xs mt-1">Up to 12 images · max 15MB each</div>
+              <label htmlFor={pickInputId} className="inline-block">
+                <span className="btn btn-outline">Choose files</span>
               </label>
 
               {!!evFiles.length && (
@@ -333,12 +334,7 @@ export default function DevProjectDetail() {
                       <figcaption className="px-2 py-1 text-[11px] bg-black/40 backdrop-blur">
                         <span className="truncate block" title={f.name}>{f.name}</span>
                       </figcaption>
-                      <button
-                        type="button"
-                        onClick={() => removePicked(i)}
-                        className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full h-6 w-6 text-xs"
-                        title="Remove"
-                      >×</button>
+                      <button type="button" onClick={() => removePicked(i)} className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-full h-6 w-6 text-xs">×</button>
                     </figure>
                   ))}
                 </div>
@@ -350,23 +346,27 @@ export default function DevProjectDetail() {
                 {evBusy ? "Adding…" : "Add entry"}
               </button>
             </div>
-            <div className="text-muted-xs">Visible to Client and Admin.</div>
+            <div className="text-muted-xs">Visible to Client & Admin.</div>
           </div>
 
           <div className="card-surface card-pad">
             <div className="card-title mb-2">Evidence timeline</div>
             <div className="space-stack">
-              {(project.evidence || []).map((it, i)=>(
+              {(project.evidence || []).map((it, i) => (
                 <div key={i} className="bg-white/5 rounded-xl p-3">
                   <div className="font-extrabold">{it.title}</div>
-                  {!!(it.links||[]).length && (
+                  {!!(it.links || []).length && (
                     <ul className="text-sm mt-1">
-                      {it.links.map((l, k)=>(<li key={k}><a className="subtle-link" href={l} target="_blank" rel="noreferrer">{l}</a></li>))}
+                      {it.links.map((l, k) => (
+                        <li key={k}><a className="subtle-link" href={l} target="_blank" rel="noreferrer">{l}</a></li>
+                      ))}
                     </ul>
                   )}
-                  {!!(it.images||[]).length && (
+                  {!!(it.images || []).length && (
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      {it.images.map((im, k)=>(<img key={k} alt="" src={im.url} className="rounded-lg border border-white/10" />))}
+                      {it.images.map((im, k) => (
+                        <img key={k} alt="" src={im.url} className="rounded-lg border border-white/10" />
+                      ))}
                     </div>
                   )}
                   <div className="text-muted-xs mt-1">{new Date(it.ts).toLocaleString()}</div>
@@ -374,37 +374,6 @@ export default function DevProjectDetail() {
               ))}
               {!((project.evidence || []).length) && <div className="text-muted-xs">No evidence yet.</div>}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* CHAT */}
-      {tab === "chat" && (
-        <div className="grid-2">
-          <div className="card-surface card-pad">
-            <div className="card-title mb-2">Project chat (Client ↔ Developer)</div>
-            <div className="bg-white/5 rounded-xl p-3 h-80 overflow-auto space-y-2">
-              {chat.map((m, i)=>(
-                <div key={i} className={`p-2 rounded-lg ${m.from === "developer" ? "bg-primary/20" : "bg-white/10"}`}>
-                  <div className="text-xs text-white/60 mb-1">{m.from} · {new Date(m.ts).toLocaleString()}</div>
-                  <div>{m.text}</div>
-                </div>
-              ))}
-              {!chat.length && <div className="text-muted-xs">No messages yet.</div>}
-            </div>
-
-            <div className="form-actions mt-tight">
-              <input className="form-input" placeholder="Type a message for the client…" value={msg} onChange={(e)=>setMsg(e.target.value)} />
-              <button className="btn btn-primary" onClick={()=>sendMessage("developer")}>Send</button>
-            </div>
-          </div>
-
-          <div className="card-surface card-pad">
-            <div className="card-title mb-2">Guidance</div>
-            <ul className="text-sm text-muted space-stack">
-              <li>Status is read-only for developers.</li>
-              <li>Evidence is saved to the backend; announcements/chat are local for now.</li>
-            </ul>
           </div>
         </div>
       )}
