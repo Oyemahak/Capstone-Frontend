@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 5173,
     open: true,
-    // 👇 Dev-only proxy so localhost can call your Vercel Serverless Functions
+    // Dev-only proxy so localhost can call your Vercel Serverless Functions
     proxy: {
       // Any request to /vercel-api/* will be proxied to https://mspixelpulse.vercel.app/api/*
       "/vercel-api": {
