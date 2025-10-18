@@ -9,7 +9,21 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
   },
-  server: { host: true, port: 5173, open: true },
+  server: {
+    host: true,
+    port: 5173,
+    open: true,
+    // 👇 Dev-only proxy so localhost can call your Vercel Serverless Functions
+    proxy: {
+      // Any request to /vercel-api/* will be proxied to https://mspixelpulse.vercel.app/api/*
+      "/vercel-api": {
+        target: "https://mspixelpulse.vercel.app",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (pathStr) => pathStr.replace(/^\/vercel-api/, "/api"),
+      },
+    },
+  },
   preview: { port: 4173 },
   optimizeDeps: { include: ["three"] },
   build: {
