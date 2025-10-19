@@ -233,3 +233,28 @@ export const invoices = {
   remove: (projectId, invoiceId) =>
     http(`/projects/${projectId}/invoices/${invoiceId}`, { method: "DELETE" }),
 };
+
+/* ---------- Users: profile (avatar) ---------- */
+export const users = {
+  async uploadMyAvatar(file) {
+    const token = getToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const fd = new FormData();
+    fd.append("avatar", file);
+    const res = await fetch(`${API_BASE}/users/me/avatar`, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: fd,
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data?.message || `HTTP ${res.status}`);
+      err.status = res.status; err.data = data; throw err;
+    }
+    return data; // { ok, avatarUrl }
+  },
+  async deleteMyAvatar() {
+    return http("/users/me/avatar", { method: "DELETE" });
+  },
+};

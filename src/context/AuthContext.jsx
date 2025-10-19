@@ -68,6 +68,11 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => auth.register(payload), []);
 
+  // NEW: allow in-app updates (e.g., avatarUrl) without reloading
+  const updateUser = useCallback((partial) => {
+    setUser((prev) => prev ? { ...prev, ...partial } : prev);
+  }, []);
+
   const value = useMemo(() => ({
     user,
     role: user?.role || null,
@@ -76,7 +81,8 @@ export function AuthProvider({ children }) {
     login,
     logout,
     register,
-  }), [user, checked, login, logout, register]);
+    updateUser,     // NEW
+  }), [user, checked, login, logout, register, updateUser]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

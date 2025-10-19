@@ -1,4 +1,4 @@
-// src/portals/admin/index.jsx
+// frontend/src/portals/admin/index.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import PortalShell from "@/components/portal/PortalShell.jsx";
 
@@ -10,16 +10,14 @@ import Projects from "./Projects.jsx";
 import ProjectDetail from "./ProjectDetail.jsx";
 import ProjectNew from "./ProjectNew.jsx";
 import Approvals from "./Approvals.jsx";
-import Settings from "./Settings.jsx";
 import Billings from "./Billings.jsx";
 
-// Chat
 import Discussions from "./Discussions.jsx";
 import DirectIndex from "./DirectIndex.jsx";
 import Direct from "./Direct.jsx";
 
-// NEW
 import Requirements from "./Requirements.jsx";
+import MyAccount from "./MyAccount.jsx";
 
 export default function AdminPortal() {
   return (
@@ -36,21 +34,18 @@ export default function AdminPortal() {
         <Route path="projects" element={<Projects />} />
         <Route path="projects/new" element={<ProjectNew />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
-
-        {/* NEW: Requirements read-only view per project */}
         <Route path="projects/:projectId/requirements" element={<Requirements />} />
 
         <Route path="billing" element={<Billings />} />
 
-        {/* Project rooms */}
         <Route path="discussions" element={<Discussions />} />
         <Route path="discussions/:projectId" element={<Discussions />} />
 
-        {/* Direct messages */}
         <Route path="direct" element={<DirectIndex />} />
         <Route path="direct/:peerId" element={<Direct />} />
 
-        <Route path="settings" element={<Settings />} />
+        <Route path="my-account" element={<MyAccount />} />
+
         <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
     </PortalShell>

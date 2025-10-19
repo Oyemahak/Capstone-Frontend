@@ -6,22 +6,24 @@ import DevDashboard from "./DevDashboard.jsx";
 import Projects from "./Projects.jsx";
 import ProjectDetail from "./ProjectDetail.jsx";
 import Team from "./Team.jsx";
-import Settings from "./Settings.jsx";
 import Discussions from "./Discussions.jsx";
 import Direct from "./Direct.jsx";
-// NEW
 import Requirements from "./Requirements.jsx";
+
+// NEW: replace Settings with MyAccount
+import MyAccount from "./MyAccount.jsx";
 
 export default function DevPortal() {
   return (
     <PortalShell>
       <Routes>
+        {/* Dashboard */}
         <Route index element={<DevDashboard />} />
         <Route path="dashboard" element={<DevDashboard />} />
 
+        {/* Projects */}
         <Route path="projects" element={<Projects />} />
         <Route path="projects/:projectId" element={<ProjectDetail />} />
-        {/* NEW: Requirements page for this project */}
         <Route path="projects/:projectId/requirements" element={<Requirements />} />
 
         {/* Project rooms */}
@@ -32,8 +34,11 @@ export default function DevPortal() {
         <Route path="direct" element={<Direct />} />
         <Route path="direct/:peerId" element={<Direct />} />
 
+        {/* Team & Account */}
         <Route path="team" element={<Team />} />
-        <Route path="settings" element={<Settings />} />
+        <Route path="my-account" element={<MyAccount />} />
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="." replace />} />
       </Routes>
     </PortalShell>

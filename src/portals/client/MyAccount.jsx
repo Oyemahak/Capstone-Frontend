@@ -1,11 +1,8 @@
 // src/portals/client/MyAccount.jsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
-
-/* Local draft until backend endpoints exist */
-const LSK = "client:myaccount:draft";
-const readDraft = () => { try { return JSON.parse(localStorage.getItem(LSK) || "{}"); } catch { return {}; } };
-const writeDraft = (v) => { try { localStorage.setItem(LSK, JSON.stringify(v || {})); } catch {} };
+import { users } from "@/lib/api.js";
 
 function niceSize(n = 0) {
   if (!n) return "";
@@ -14,78 +11,87 @@ function niceSize(n = 0) {
 }
 
 export default function MyAccount() {
-  const { user } = useAuth();
-
-  const [name, setName] = useState(user?.name || "");
+  const { user, updateUser } = useAuth();
+  const [previewUrl, setPreviewUrl] = useState(user?.avatarUrl || "");
+  const [fileMeta, setFileMeta] = useState(null);
+  const [fileBlob, setFileBlob] = useState(null);
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
-
-  // avatar (local preview only)
-  const [avatarFile, setAvatarFile] = useState(null); // {name,size,type,__blob?}
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  // restore draft
-  useEffect(() => {
-    const d = readDraft();
-    if (d?.name) setName(d.name);
-    if (d?.avatarMeta) {
-      // meta only; blob preview only works during the current session
-      setAvatarFile(d.avatarMeta);
-    }
-  }, []);
-
-  // live preview object URL
+  const pickRef = useRef(null);
   const revokeRef = useRef(null);
+
   useEffect(() => {
+    setPreviewUrl(user?.avatarUrl || "");
+    setFileMeta(null);
+    setFileBlob(null);
+  }, [user?._id, user?.avatarUrl]);
+
+  function onPick(e) {
+    const f = (e.target.files || [])[0];
+    if (!f) return;
+    setFileMeta({ name: f.name, size: f.size, type: f.type });
+    setFileBlob(f);
+
     if (revokeRef.current) {
       URL.revokeObjectURL(revokeRef.current);
       revokeRef.current = null;
     }
-    if (avatarFile?.__blob) {
-      const u = URL.createObjectURL(avatarFile.__blob);
-      setAvatarUrl(u);
-      revokeRef.current = u;
-    } else {
-      setAvatarUrl("");
+    const u = URL.createObjectURL(f);
+    setPreviewUrl(u);
+    revokeRef.current = u;
+  }
+
+  function removeAvatar() {
+    setFileMeta(null);
+    setFileBlob(null);
+    setPreviewUrl("");
+  }
+
+  async function save() {
+    if (pwd && pwd !== pwd2) {
+      setMsg("Passwords do not match.");
+      setTimeout(() => setMsg(""), 1200);
+      return;
     }
-    return () => {
+
+    try {
+      setBusy(true);
+      // 1) Upload new avatar if picked
+      if (fileBlob) {
+        const { avatarUrl } = await users.uploadMyAvatar(fileBlob);
+        // 2) reflect immediately in header
+        updateUser({ avatarUrl });
+        setMsg("Saved.");
+      } else if (!previewUrl && user?.avatarUrl) {
+        // user clicked Remove then Save
+        await users.deleteMyAvatar();
+        updateUser({ avatarUrl: "" });
+        setMsg("Removed.");
+      } else {
+        setMsg("Saved.");
+      }
+    } catch (e) {
+      setMsg(e?.message || "Failed to save.");
+    } finally {
+      setBusy(false);
+      setTimeout(() => setMsg(""), 1000);
+      if (pickRef.current) pickRef.current.value = "";
       if (revokeRef.current) {
         URL.revokeObjectURL(revokeRef.current);
         revokeRef.current = null;
       }
-    };
-  }, [avatarFile]);
-
-  function pickAvatar() {
-    const el = document.createElement("input");
-    el.type = "file";
-    el.accept = "image/*";
-    el.onchange = () => {
-      const f = el.files?.[0];
-      if (!f) return;
-      setAvatarFile({ name: f.name, size: f.size, type: f.type, __blob: f });
-    };
-    el.click();
-  }
-  function clearAvatar() { setAvatarFile(null); }
-
-  function save() {
-    if (pwd && pwd !== pwd2) { setMsg("Passwords do not match."); return; }
-    writeDraft({
-      name,
-      avatarMeta: avatarFile ? { name: avatarFile.name, size: avatarFile.size, type: avatarFile.type } : null,
-    });
-    setMsg("Saved locally. We’ll wire server updates next.");
-    setTimeout(() => setMsg(""), 1500);
+    }
   }
 
   const avatarSubtitle = useMemo(() => {
-    if (!avatarFile) return "PNG / JPG / SVG";
-    const parts = [avatarFile.name];
-    const s = niceSize(avatarFile.size); if (s) parts.push(s);
-    return parts.join(" • ");
-  }, [avatarFile]);
+    if (!previewUrl && !user?.avatarUrl) return "PNG / JPG / SVG";
+    if (!fileMeta?.name) return "Current image";
+    const s = niceSize(fileMeta.size);
+    return [fileMeta.name, s].filter(Boolean).join(" • ");
+  }, [previewUrl, user?.avatarUrl, fileMeta]);
 
   return (
     <div className="page-shell space-y-6">
@@ -94,7 +100,7 @@ export default function MyAccount() {
         <div />
       </div>
 
-      {/* Identity */}
+      {/* Identity (email and name are read-only for clients) */}
       <div className="card-surface card-pad space-stack max-w-3xl">
         <div className="text-muted-xs">Client · {user?.email}</div>
 
@@ -106,7 +112,10 @@ export default function MyAccount() {
 
         <label className="block">
           <div className="form-label">Full name</div>
-          <input className="form-input" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Your display name" />
+          <input className="form-input" value={user?.name || ""} disabled />
+          <div className="row-sub mt-1">
+            Need a correction? <Link className="subtle-link" to="/client/support">Open a support ticket</Link>.
+          </div>
         </label>
 
         <div className="grid md:grid-cols-2 gap-3">
@@ -126,27 +135,33 @@ export default function MyAccount() {
         <div className="card-title mb-3">Profile picture</div>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-white/10 overflow-hidden flex items-center justify-center text-white/60">
-            {avatarUrl
-              ? <img alt="avatar" src={avatarUrl} className="w-full h-full object-cover" />
+            {(previewUrl || user?.avatarUrl)
+              ? <img alt="avatar" src={previewUrl || user?.avatarUrl} className="w-full h-full object-cover" />
               : <span className="text-sm">No image</span>}
           </div>
 
           <div className="flex-1">
             <div className="text-sm text-white/80">{avatarSubtitle}</div>
-            <div className="text-xs text-white/50">Shown across your client portal.</div>
+            <div className="text-xs text-white/50">Shown in the header and across your client portal.</div>
             <div className="mt-2 flex gap-2">
-              <button className="btn btn-outline btn-sm" onClick={pickAvatar}>Upload image</button>
-              {avatarFile && <button className="btn btn-outline btn-sm" onClick={clearAvatar}>Remove</button>}
+              <input ref={pickRef} type="file" accept="image/*" className="sr-only" onChange={onPick} />
+              <label className="btn btn-outline btn-sm" onClick={() => pickRef.current?.click()}>
+                Upload image
+              </label>
+              {(previewUrl || user?.avatarUrl) && (
+                <button className="btn btn-outline btn-sm" onClick={removeAvatar}>Remove</button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="max-w-3xl">
         {msg && <div className="text-success mb-3">{msg}</div>}
         <div className="form-actions">
-          <button className="btn btn-primary" onClick={save}>Save changes</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
+          </button>
         </div>
       </div>
     </div>

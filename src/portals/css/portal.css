@@ -19,7 +19,6 @@ body {
     @apply text-textMain antialiased bg-transparent;
 }
 
-/* Optional: keep scrollbar slot reserved */
 html {
     overflow-y: scroll;
 }
@@ -84,7 +83,6 @@ html {
     @apply flex items-center justify-end gap-2 pt-2;
 }
 
-/* Header strip inside cards (lists/tables) */
 .card-head {
     @apply flex items-center justify-between mb-3;
 }
@@ -124,7 +122,6 @@ html {
     @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-textSub;
 }
 
-/* icon button */
 .icon-btn {
     @apply h-8 w-8 inline-grid place-items-center rounded-lg hover:bg-white/10;
 }
@@ -173,7 +170,6 @@ html {
     @apply text-3xl font-black mt-1;
 }
 
-/* List rows (dashboard panels) */
 .list {
     @apply divide-y divide-white/10;
 }
@@ -218,7 +214,6 @@ html {
         @apply text-right whitespace-nowrap pr-4;
     }
 
-    /* width helpers for columns */
     .w-42 {
         width: 42%;
     }
@@ -236,12 +231,10 @@ html {
     }
 }
 
-/* Empty states inside tables */
 .empty-cell {
     @apply text-white/70 py-6 px-5;
 }
 
-/* Inline editor row look */
 .row-edit td {
     @apply p-4 bg-white/5;
 }
@@ -253,10 +246,6 @@ input,
 select,
 textarea {
     @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 h-11;
-}
-
-.form-input {
-    /* alias for clarity */
 }
 
 textarea,
@@ -300,30 +289,113 @@ textarea,
     @apply mt-4;
 }
 
-.form-field {
-    /* wrapper for labels/inputs */
-}
-
 .form-label {
     @apply text-xs text-white/65 mb-1;
 }
 
-/* Filters 1fr / 200px grid */
 .filters-grid {
     @apply card-pad;
     display: grid;
-    gap: 0.75rem;
+    gap: .75rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width:768px) {
     .filters-grid {
         grid-template-columns: 1fr 200px;
     }
 }
 
-/* ───────────────────────────────────────────────────────────
-   Liquid canvas container (unchanged)
-   ─────────────────────────────────────────────────────────── */
+/* Avatar fallback */
+.avatar-fallback {
+    display: inline-grid;
+    place-items: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .06));
+    color: rgba(255, 255, 255, .9);
+    font-weight: 800;
+    letter-spacing: .25px;
+}
+
+/* Compact profile button */
+.profile-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    width: 2.25rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .04);
+    backdrop-filter: blur(10px);
+    transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
+}
+
+.profile-chip:hover {
+    background: rgba(255, 255, 255, .08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+}
+
+.profile-chip:active {
+    transform: scale(.98);
+}
+
+/* User dropdown (glassy card) */
+.user-menu {
+    position: absolute;
+    top: 2.75rem;
+    right: 0;
+    min-width: 240px;
+    padding: .75rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: radial-gradient(90rem 90rem at top right, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04)), rgba(10, 10, 12, .55);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+    transform-origin: top right;
+    transition: transform .14s ease, opacity .14s ease;
+    z-index: 60;
+}
+
+/* Dropdown items */
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    width: 100%;
+    padding: .6rem .55rem;
+    margin-top: .35rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: .92rem;
+    color: rgba(255, 255, 255, .92);
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(255, 255, 255, .12);
+}
+
+.menu-item.danger {
+    color: #ffb3b3;
+}
+
+.menu-item.danger:hover {
+    background: rgba(255, 68, 68, .12);
+    border-color: rgba(255, 68, 68, .25);
+}
+
+/* Optional shared glass card (e.g., feedback) */
+.glass-card {
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: radial-gradient(90rem 90rem at top left, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03)), rgba(10, 10, 12, .55);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .38);
+}
+
+/* Liquid canvas container */
 .liquid-ether-container {
     position: relative;
     overflow: hidden;
