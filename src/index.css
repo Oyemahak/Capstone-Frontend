@@ -478,3 +478,60 @@ textarea,
 @media (max-width: 767px) {
   .review-arrow { display: none; }
 }
+/* Subtle frosted drop-shadow button (no shiny border) */
+.btn-shiny {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent; /* keep your Tailwind bg if combined */
+  transition: box-shadow .18s ease, transform .12s ease, border-color .18s ease;
+
+  /* default glow (stronger before hover) */
+  box-shadow:
+    0 18px 44px rgba(12, 12, 18, 0.5),
+    0 6px 18px rgba(12, 12, 18, 0.8),
+    0 2px 10px rgba(82, 39, 255, 1); /* slight theme tint */
+}
+
+/* Hover: shadow fades (lighter + tighter), minimal lift if you like */
+.btn-shiny:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 12px 28px rgba(12, 12, 18, 0.26),
+    0 4px 12px rgba(12, 12, 18, 0.20),
+    0 1px 6px rgba(82, 39, 255, 0.10);
+}
+
+/* Focus style for keyboard users (keeps your aesthetic) */
+.btn-shiny:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.12),
+    0 14px 36px rgba(12, 12, 18, 0.30);
+}
+
+/* Reduce heavy shadows on very small screens to avoid visual clutter */
+@media (max-width: 480px) {
+  .btn-shiny {
+    box-shadow:
+      0 14px 36px rgba(12, 12, 18, 0.32),
+      0 5px 14px rgba(12, 12, 18, 0.24),
+      0 2px 8px rgba(82, 39, 255, 0.12);
+  }
+  .btn-shiny:hover {
+    box-shadow:
+      0 10px 24px rgba(12, 12, 18, 0.24),
+      0 3px 10px rgba(12, 12, 18, 0.18),
+      0 1px 6px rgba(82, 39, 255, 0.08);
+  }
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn-shiny,
+  .btn-shiny:hover {
+    transition: border-color .18s ease, box-shadow .18s ease;
+    transform: none;
+  }
+}

@@ -4,10 +4,19 @@ import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
 import { FORMS_BASE } from "@/lib/forms.js";
 
+/* Icons */
+import { SiWhatsapp } from "react-icons/si";
+import { LuCalendar, LuSend } from "react-icons/lu";
+
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState("");
+
+  // Pre-filled WhatsApp CTA
+  const waHref =
+    "https://wa.me/13658830338?text=" +
+    encodeURIComponent("Hi MSPixelPulse! I'm interested in a website. Can we chat?");
 
   async function submit(e) {
     e.preventDefault();
@@ -46,19 +55,29 @@ export default function Contact() {
     <section className="section">
       <Container>
         <SectionTitle eyebrow="Contact" title="Tell us about your project" align="left" />
+
         <div className="grid md:grid-cols-2 gap-6">
+          {/* Form */}
           <form className="space-y-3" onSubmit={submit}>
             <input
+              type="text"
+              autoComplete="name"
               className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
               placeholder="Your name"
               value={form.name}
               onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+              aria-label="Your name"
+              required
             />
             <input
+              type="email"
+              autoComplete="email"
               className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
               placeholder="Email"
               value={form.email}
               onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+              aria-label="Email"
+              required
             />
             <textarea
               rows={6}
@@ -66,15 +85,21 @@ export default function Contact() {
               placeholder="Your message"
               value={form.message}
               onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))}
+              aria-label="Your message"
+              required
             />
-            <div className="flex items-center gap-3">
-              <button className="btn btn-primary" disabled={submitting}>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="btn btn-primary" disabled={submitting} type="submit">
+                <LuSend className="mr-2 h-5 w-5" aria-hidden="true" />
                 {submitting ? "Sending…" : "Send message"}
               </button>
-              {note && <div className="text-sm text-white/70">{note}</div>}
+
+              {note && <div className="text-sm text-white/70 min-w-full">{note}</div>}
             </div>
           </form>
 
+          {/* Side card */}
           <div className="card-surface p-5">
             <div className="font-black">How we’ll respond</div>
             <ul className="text-textSub mt-3 space-y-2 text-sm">
@@ -85,19 +110,33 @@ export default function Contact() {
           </div>
         </div>
 
-        <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto] gap-4 items-center">
+        {/* Inline CTA */}
+        <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto_auto] gap-4 items-center glass-hover">
           <div>
             <h3 className="text-2xl font-black">Have a project in mind?</h3>
             <p className="text-textSub mt-1 text-[16px] md:text-[18px] leading-relaxed">
               Tell us your goals — we’ll propose the simplest path to launch.
             </p>
           </div>
+
           <a
-            className="btn btn-primary"
+            className="btn btn-outline btn-shiny"
+            href={waHref}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Text me on WhatsApp"
+          >
+            <SiWhatsapp className="mr-2 h-5 w-5" aria-hidden="true" />
+            Text me on WhatsApp
+          </a>
+
+          <a
+            className="btn btn-outline"
             href="https://calendly.com/mspixelpulse/30min"
             target="_blank"
             rel="noreferrer"
           >
+            <LuCalendar className="mr-2 h-5 w-5" aria-hidden="true" />
             Book appointment
           </a>
         </div>

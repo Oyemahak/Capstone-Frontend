@@ -7,7 +7,16 @@ import Badge from "../components/ui/Badge.jsx";
 import { projects } from "../data/projects.js";
 import Feedback from "@/components/Feedback.jsx";
 
+/* Icons (you already have these) */
+import { SiWhatsapp } from "react-icons/si";
+import { LuTag, LuCalendar, LuRocket } from "react-icons/lu";
+
 export default function Home() {
+  // Pre-filled WhatsApp message
+  const waHref =
+    "https://wa.me/13658830338?text=" +
+    encodeURIComponent("Hi MSPixelPulse! I'm interested in a website. Can we chat?");
+
   return (
     <div className="relative">
       {/* ambient bg */}
@@ -46,24 +55,73 @@ export default function Home() {
                 We design & build delightful sites with a client portal that keeps
                 everything in one place — projects, files, discussions, and delivery.
               </p>
+
+              {/* Hero buttons */}
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link className="btn btn-primary" to="/pricing">See Pricing</Link>
-                <Link className="btn btn-outline" to="/projects">View Projects</Link>
-                <a className="btn btn-outline" href="https://calendly.com/mspixelpulse/30min" target="_blank" rel="noreferrer">
-                  Book appointment
-                </a>
+                <Link className="btn btn-primary" to="/pricing">
+                  <LuTag className="mr-2 h-5 w-5" aria-hidden="true" />
+                  See Pricing
+                </Link>
+                <Link className="btn btn-outline" to="/contact">
+                  <LuRocket className="mr-2 h-5 w-5" aria-hidden="true" />
+                  Start Project
+                </Link>
               </div>
             </div>
 
-            {/* Includes card with animated gradient border */}
+            {/* Includes card */}
             <div className="include-panel animate-fade-up">
               <div className="include-title">Includes</div>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {["Managed hosting", "SSL & Security", "Client Portal", "SEO & Analytics"].map((label) => (
-                  <li key={label} className="include-pill text-desc">{label}</li>
-                ))}
+                {["Managed hosting", "SSL & Security", "Client Portal", "SEO & Analytics"].map(
+                  (label) => (
+                    <li key={label} className="include-pill text-desc flex items-center gap-2">
+                      <span className="inline-block h-2 w-2 rounded-full bg-primary"></span>
+                      {label}
+                    </li>
+                  )
+                )}
               </ul>
               <div className="include-ring" />
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* NEW CTA SECTION (after Hero, before Recent Work) */}
+      <section className="section pt-0">
+        <Container>
+          <div className="card-surface p-6 md:p-8 glass-hover">
+            <div className="grid md:grid-cols-[1fr_auto_auto] items-center gap-4">
+              <div>
+                <h3 className="text-2xl font-black">Ready to boost your online presence?</h3>
+                <p className="text-textSub mt-1 text-desc">
+                  Start a project today and get your custom site live fast.
+                </p>
+              </div>
+
+              {/* WhatsApp button */}
+              <a
+                className="btn btn-outline btn-shiny"
+                href={waHref}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Text me on WhatsApp"
+              >
+                <SiWhatsapp className="mr-2 h-5 w-5" aria-hidden="true" />
+                Text me on WhatsApp
+              </a>
+
+              {/* Book appointment */}
+              <a
+                className="btn btn-outline"
+                href="https://calendly.com/mspixelpulse/30min"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <LuCalendar className="mr-2 h-5 w-5" aria-hidden="true" />
+                Book appointment
+              </a>
             </div>
           </div>
         </Container>
@@ -77,12 +135,18 @@ export default function Home() {
             {projects.slice(0, 3).map((p) => (
               <a key={p.id} href={`/projects/${p.id}`} className="group">
                 <div className="overflow-hidden rounded-2xl border border-white/10">
-                  <img className="h-48 w-full object-cover transition scale-100 group-hover:scale-105" src={p.thumb} alt="" />
+                  <img
+                    className="h-48 w-full object-cover transition scale-100 group-hover:scale-105"
+                    src={p.thumb}
+                    alt=""
+                  />
                 </div>
                 <div className="card-surface px-5 py-4 -mt-5 relative">
                   <div className="flex gap-2 flex-wrap mb-2">
                     {p.stack.slice(0, 3).map((s) => (
-                      <span key={s} className="badge">{s}</span>
+                      <span key={s} className="badge">
+                        {s}
+                      </span>
                     ))}
                   </div>
                   <div className="font-extrabold">{p.title}</div>
@@ -91,24 +155,10 @@ export default function Home() {
               </a>
             ))}
           </div>
-
-          {/* CTA */}
-          <div className="mt-12 card-surface p-6 md:p-8">
-            <div className="grid md:grid-cols-[1fr_auto_auto] items-center gap-4">
-              <div>
-                <h3 className="text-2xl font-black">Ready to boost your online presence?</h3>
-                <p className="text-textSub mt-1 text-desc">Start a project today and get your custom site live fast.</p>
-              </div>
-              <a href="/contact" className="btn btn-primary">Start Project</a>
-              <a className="btn btn-outline" href="https://calendly.com/mspixelpulse/30min" target="_blank" rel="noreferrer">
-                Book appointment
-              </a>
-            </div>
-          </div>
         </Container>
       </section>
 
-      {/* FEEDBACK (this component should POST to /api/feedback) */}
+      {/* FEEDBACK */}
       <Feedback />
     </div>
   );

@@ -3,6 +3,23 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 
+/* Lucide icons (react-icons/lu) */
+import {
+  LuLayoutGrid,      // Home
+  LuFolderOpen,      // Projects
+  LuWrench,          // Services
+  LuTags,            // Pricing
+  LuMail,            // Contact
+  LuLogIn,           // Login
+  LuRocket,          // Start project
+  LuLayoutDashboard, // Portal
+  LuMenu,            // Mobile open
+  LuX,               // Mobile close
+  LuUser,            // My account
+  LuLifeBuoy,        // Support
+  LuLogOut,          // Logout
+} from "react-icons/lu";
+
 /* Helpers */
 function initials(name = "", email = "") {
   const base = (name || email || "").trim();
@@ -20,7 +37,7 @@ export default function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false); // profile dropdown
   const menuRef = useRef(null);
 
-  const avatarUrl = user?.avatarUrl || ""; // ← Supabase URL saved on the user
+  const avatarUrl = user?.avatarUrl || ""; // Supabase URL saved on the user
 
   const portalPath =
     role === "admin" ? "/admin" : role === "developer" ? "/dev" : "/client";
@@ -58,47 +75,70 @@ export default function AppHeader() {
   const closeMobile = useCallback(() => setOpen(false), []);
   const linkClass = ({ isActive }) =>
     [
-      "px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+      "px-3 py-2 rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-2",
       isActive ? "bg-white/10" : "hover:bg-white/5",
     ].join(" ");
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[rgba(10,10,12,0.55)] backdrop-blur-lg">
       <div className="container-edge h-16 flex items-center justify-between">
-        {/* Brand */}
-        <Link to="/" className="font-black tracking-tight" onClick={closeMobile}>
-          MSPixelPulse
+        {/* Brand (logo + name) */}
+        <Link to="/" className="flex items-center gap-2 font-black tracking-tight" onClick={closeMobile}>
+          <img
+            src="/logo.svg"
+            alt=""
+            className="h-6 w-6 object-contain"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
+          <span>MSPixelPulse</span>
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <NavLink to="/" className={linkClass} end>Home</NavLink>
-          <NavLink to="/projects" className={linkClass}>Projects</NavLink>
-          <NavLink to="/services" className={linkClass}>Services</NavLink>
-          <NavLink to="/pricing" className={linkClass}>Pricing</NavLink>
-          <NavLink to="/contact" className={linkClass}>Contact</NavLink>
+          <NavLink to="/" className={linkClass} end>
+            <LuLayoutGrid className="h-4 w-4" /> Home
+          </NavLink>
+          <NavLink to="/projects" className={linkClass}>
+            <LuFolderOpen className="h-4 w-4" /> Projects
+          </NavLink>
+          <NavLink to="/services" className={linkClass}>
+            <LuWrench className="h-4 w-4" /> Services
+          </NavLink>
+          <NavLink to="/pricing" className={linkClass}>
+            <LuTags className="h-4 w-4" /> Pricing
+          </NavLink>
+          <NavLink to="/contact" className={linkClass}>
+            <LuMail className="h-4 w-4" /> Contact
+          </NavLink>
         </nav>
 
         {/* Right side actions */}
         <div className="hidden md:flex items-center gap-3">
           {!isAuthed ? (
             <>
+              {/* Login styled like a primary CTA */}
               <NavLink
                 to="/login"
                 className={({ isActive }) =>
                   [
-                    "px-4 h-10 rounded-xl font-bold inline-flex items-center transition-colors",
-                    isActive ? "bg-white/10" : "hover:bg-white/5",
+                    "px-4 h-10 rounded-xl font-bold inline-flex items-center gap-2 transition-colors",
+                    "btn btn-primary",
+                    isActive ? "opacity-90" : "",
                   ].join(" ")
                 }
               >
-                Login
+                <LuLogIn className="h-4 w-4" /> Login
               </NavLink>
-              <Link to="/contact" className="btn btn-primary h-10">Start Project</Link>
+
+              <Link to="/contact" className="btn btn-outline h-10 inline-flex items-center gap-2">
+                <LuRocket className="h-4 w-4" /> Start Project
+              </Link>
             </>
           ) : (
             <>
-              <Link to={portalPath} className="btn btn-outline h-10">Portal</Link>
+              <Link to={portalPath} className="btn btn-outline h-10 inline-flex items-center gap-2">
+                <LuLayoutDashboard className="h-4 w-4" /> Portal
+              </Link>
 
               {/* Profile */}
               <div className="relative" ref={menuRef}>
@@ -134,18 +174,18 @@ export default function AppHeader() {
                     </div>
                   </div>
 
-                  <MenuLink to={myAccountPath} icon="user" onClick={() => setMenuOpen(false)}>
-                    My account
+                  <MenuLink to={myAccountPath} onClick={() => setMenuOpen(false)}>
+                    <LuUser className="h-4 w-4" /> <span>My account</span>
                   </MenuLink>
 
                   {role === "client" && (
-                    <MenuLink to={supportPath} icon="life-buoy" onClick={() => setMenuOpen(false)}>
-                      Support
+                    <MenuLink to={supportPath} onClick={() => setMenuOpen(false)}>
+                      <LuLifeBuoy className="h-4 w-4" /> <span>Support</span>
                     </MenuLink>
                   )}
 
                   <button className="menu-item danger" onClick={doLogout} role="menuitem">
-                    {Icon("logout")} <span>Logout</span>
+                    <LuLogOut className="h-4 w-4" /> <span>Logout</span>
                   </button>
                 </div>
               </div>
@@ -159,10 +199,9 @@ export default function AppHeader() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
+          title={open ? "Close menu" : "Open menu"}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" className="text-white/90" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            {open ? <path d="M6 6l12 12M18 6L6 18" /> : (<><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>)}
-          </svg>
+          {open ? <LuX className="h-5 w-5 text-white/90" /> : <LuMenu className="h-5 w-5 text-white/90" />}
         </button>
       </div>
 
@@ -171,29 +210,51 @@ export default function AppHeader() {
         <div className="container-edge pb-4">
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
             <nav className="p-2">
-              <MobileLink to="/" onClick={closeMobile} end>Home</MobileLink>
-              <MobileLink to="/projects" onClick={closeMobile}>Projects</MobileLink>
-              <MobileLink to="/services" onClick={closeMobile}>Services</MobileLink>
-              <MobileLink to="/pricing" onClick={closeMobile}>Pricing</MobileLink>
-              <MobileLink to="/contact" onClick={closeMobile}>Contact</MobileLink>
+              <MobileLink to="/" onClick={closeMobile} end>
+                <LuLayoutGrid className="h-4 w-4 mr-2" /> Home
+              </MobileLink>
+              <MobileLink to="/projects" onClick={closeMobile}>
+                <LuFolderOpen className="h-4 w-4 mr-2" /> Projects
+              </MobileLink>
+              <MobileLink to="/services" onClick={closeMobile}>
+                <LuWrench className="h-4 w-4 mr-2" /> Services
+              </MobileLink>
+              <MobileLink to="/pricing" onClick={closeMobile}>
+                <LuTags className="h-4 w-4 mr-2" /> Pricing
+              </MobileLink>
+              <MobileLink to="/contact" onClick={closeMobile}>
+                <LuMail className="h-4 w-4 mr-2" /> Contact
+              </MobileLink>
 
               <div className="h-px my-2 bg-white/10" />
 
               {!isAuthed ? (
                 <>
-                  <MobileCTA to="/login" onClick={closeMobile} variant="outline">Login</MobileCTA>
-                  <MobileCTA to="/contact" onClick={closeMobile} variant="primary">Start Project</MobileCTA>
+                  <MobileCTA to="/login" onClick={closeMobile} variant="primary">
+                    <LuLogIn className="h-4 w-4 mr-2" /> Login
+                  </MobileCTA>
+                  <MobileCTA to="/contact" onClick={closeMobile} variant="outline">
+                    <LuRocket className="h-4 w-4 mr-2" /> Start Project
+                  </MobileCTA>
                 </>
               ) : (
                 <>
-                  <MobileCTA to={portalPath} onClick={closeMobile} variant="outline">Portal</MobileCTA>
-                  <MobileCTA to={myAccountPath} onClick={closeMobile} variant="outline">My account</MobileCTA>
-                  {role === "client" && <MobileCTA to={supportPath} onClick={closeMobile} variant="outline">Support</MobileCTA>}
+                  <MobileCTA to={portalPath} onClick={closeMobile} variant="outline">
+                    <LuLayoutDashboard className="h-4 w-4 mr-2" /> Portal
+                  </MobileCTA>
+                  <MobileCTA to={myAccountPath} onClick={closeMobile} variant="outline">
+                    <LuUser className="h-4 w-4 mr-2" /> My account
+                  </MobileCTA>
+                  {role === "client" && (
+                    <MobileCTA to={supportPath} onClick={closeMobile} variant="outline">
+                      <LuLifeBuoy className="h-4 w-4 mr-2" /> Support
+                    </MobileCTA>
+                  )}
                   <button
                     onClick={async () => { await doLogout(); closeMobile(); }}
-                    className="w-full mt-2 h-11 rounded-xl font-bold bg-primary hover:bg-primaryAccent text-white"
+                    className="w-full mt-2 h-11 rounded-xl font-bold bg-primary hover:bg-primaryAccent text-white inline-flex items-center justify-center gap-2"
                   >
-                    Logout
+                    <LuLogOut className="h-4 w-4" /> Logout
                   </button>
                 </>
               )}
@@ -205,33 +266,16 @@ export default function AppHeader() {
   );
 }
 
-/* ----- Menu link + icons (no extra deps) ----- */
-
-function MenuLink({ to, onClick, icon, children }) {
+/* Re-usable dropdown item (keeps your .menu-item styles) */
+function MenuLink({ to, onClick, children }) {
   return (
     <Link to={to} onClick={onClick} className="menu-item" role="menuitem">
-      {Icon(icon)}
-      <span>{children}</span>
+      {children}
     </Link>
   );
 }
 
-function Icon(name) {
-  const base = "h-4 w-4 shrink-0";
-  switch (name) {
-    case "user":
-      return (<svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21a8 8 0 10-16 0" /><circle cx="12" cy="7" r="4" /></svg>);
-    case "life-buoy":
-      return (<svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M19.07 4.93l-4.24 4.24M9.17 14.83l-4.24 4.24"/></svg>);
-    case "logout":
-      return (<svg className={base} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>);
-    default:
-      return null;
-  }
-}
-
-/* ----- Mobile helpers ----- */
-
+/* ----- Mobile helpers (previously missing) ----- */
 function MobileLink({ to, end, onClick, children }) {
   return (
     <NavLink
@@ -240,7 +284,7 @@ function MobileLink({ to, end, onClick, children }) {
       onClick={onClick}
       className={({ isActive }) =>
         [
-          "block w-full px-3 py-3 rounded-xl font-semibold transition-colors",
+          "block w-full px-3 py-3 rounded-xl font-semibold transition-colors inline-flex items-center",
           isActive ? "bg-white/10" : "hover:bg-white/5",
         ].join(" ")
       }
@@ -251,7 +295,7 @@ function MobileLink({ to, end, onClick, children }) {
 }
 
 function MobileCTA({ to, variant = "primary", onClick, children }) {
-  const base = "w-full mt-2 h-11 rounded-xl font-bold inline-flex items-center justify-center transition-colors";
+  const base = "w-full mt-2 h-11 rounded-xl font-bold inline-flex items-center justify-center gap-2 transition-colors";
   const styles =
     variant === "primary"
       ? "bg-primary hover:bg-primaryAccent text-white"

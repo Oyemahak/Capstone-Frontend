@@ -6,7 +6,11 @@ import SectionTitle from "../components/SectionTitle.jsx";
 import Card, { CardHeader, CardContent, CardTitle } from "../components/ui/Card.jsx";
 import Button from "../components/ui/Button.jsx";
 
-// Format numbers as CAD
+/* ✅ Icons */
+import { LuTag, LuRocket, LuMail } from "react-icons/lu";
+import { SiReact, SiWordpress, SiWix } from "react-icons/si";
+
+/* Format numbers as CAD */
 const CAD = (n) =>
   new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -17,10 +21,11 @@ const CAD = (n) =>
 const plans = [
   {
     key: "react",
-    stack: "React (Custom Coded)",
+    stack: "MEAN/MERN Stack(Custom Coded)",
     price: 4000,
     description:
       "A fully custom-coded React website with fast performance and modern UX/UI.",
+    icon: SiReact,
   },
   {
     key: "wordpress",
@@ -28,6 +33,7 @@ const plans = [
     price: 2000,
     description:
       "A flexible WordPress site with themes, plugins, and CMS for easy content management.",
+    icon: SiWordpress,
   },
   {
     key: "wix",
@@ -35,6 +41,7 @@ const plans = [
     price: 3000,
     description:
       "A beautifully designed Wix website with drag-and-drop editing and quick launch.",
+    icon: SiWix,
   },
   {
     key: "email",
@@ -42,6 +49,7 @@ const plans = [
     price: 400,
     description:
       "Business-grade email setup with your custom domain for a professional presence.",
+    icon: LuMail,
   },
 ];
 
@@ -49,13 +57,9 @@ export default function Pricing() {
   const nav = useNavigate();
   const [selected, setSelected] = useState(plans[0].key);
 
-  const active = useMemo(
-    () => plans.find((p) => p.key === selected),
-    [selected]
-  );
+  const active = useMemo(() => plans.find((p) => p.key === selected), [selected]);
 
   function goRegister() {
-    // Redirect to contact with context (plan + label)
     const params = new URLSearchParams({
       plan: active.key,
       label: active.stack,
@@ -73,24 +77,35 @@ export default function Pricing() {
 
       {/* Plan selector */}
       <div className="flex justify-center gap-4 mb-10 flex-wrap">
-        {plans.map((plan) => (
-          <Button
-            key={plan.key}
-            onClick={() => setSelected(plan.key)}
-            className={selected === plan.key ? "btn-primary" : "btn-outline"}
-          >
-            {plan.stack}
-          </Button>
-        ))}
+        {plans.map((plan) => {
+          const Icon = plan.icon;
+          const isActive = selected === plan.key;
+          return (
+            <Button
+              key={plan.key}
+              onClick={() => setSelected(plan.key)}
+              className={isActive ? "btn-primary" : "btn-outline"}
+            >
+              <span className="inline-flex items-center gap-2">
+                {Icon && <Icon className="h-5 w-5" aria-hidden="true" />}
+                {plan.stack}
+              </span>
+            </Button>
+          );
+        })}
       </div>
 
       {/* Selected plan card */}
       <div className="max-w-xl mx-auto">
-        <Card className="card-surface text-center">
+        <Card className="card-surface text-center glass-hover">
           <CardHeader>
-            <CardTitle>{active.stack}</CardTitle>
+            <CardTitle className="inline-flex items-center justify-center gap-2">
+              {active.icon && <active.icon className="h-5 w-5" aria-hidden="true" />}
+              {active.stack}
+            </CardTitle>
             <p className="text-textSub mt-2">{active.description}</p>
           </CardHeader>
+
           <CardContent>
             <div className="flex flex-col items-center gap-2">
               <span className="line-through text-textSub text-lg">
@@ -99,12 +114,17 @@ export default function Pricing() {
               <span className="text-4xl font-bold text-primary">
                 {CAD(active.price)}
               </span>
-              <span className="text-green-500 font-semibold">
+              <span className="text-green-500 font-semibold inline-flex items-center gap-2">
+                <LuTag className="h-5 w-5" aria-hidden="true" />
                 50% OFF Limited Time
               </span>
             </div>
 
-            <Button className="btn-primary mt-6" onClick={goRegister}>
+            <Button
+              className="btn-primary mt-6 inline-flex items-center gap-2"
+              onClick={goRegister}
+            >
+              <LuRocket className="h-5 w-5" aria-hidden="true" />
               Get Started
             </Button>
           </CardContent>
