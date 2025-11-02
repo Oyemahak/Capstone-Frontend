@@ -3,15 +3,34 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext.jsx";
 import { API_BASE } from "@/lib/api.js";
+import { useTheme } from "@/lib/theme.js";
 
 const TABS = [
-  { key: "client",    label: "Client",    email: "client@mspixel.pulse",    password: "client" },
-  { key: "developer", label: "Developer", email: "dev@mspixel.pulse",       password: "developer" },
-  { key: "admin",     label: "Admin",     email: "admin@mspixel.pulse",     password: "admin" },
+  {
+    key: "client",
+    label: "Client",
+    email: "client@mspixel.pulse",
+    password: "client",
+  },
+  {
+    key: "developer",
+    label: "Developer",
+    email: "dev@mspixel.pulse",
+    password: "developer",
+  },
+  {
+    key: "admin",
+    label: "Admin",
+    email: "admin@mspixel.pulse",
+    password: "admin",
+  },
 ];
 
 export default function Login() {
   const { isAuthed, role, login } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const nav = useNavigate();
 
   const [tab, setTab] = useState("client");
@@ -36,7 +55,7 @@ export default function Login() {
     const url = `${API_BASE}/health`;
     setWaking(true);
     fetch(url, { method: "GET", credentials: "include" })
-      .catch(() => {}) // ignore errors; it's just a warm-up
+      .catch(() => {})
       .finally(() => setTimeout(() => setWaking(false), 1200));
   }, []);
 
@@ -50,7 +69,7 @@ export default function Login() {
     const code = e?.status;
     const msg = (e?.message || "").toLowerCase();
     const looksCold =
-      !code || // network / CORS / cold timeout often surface without a status
+      !code ||
       (code >= 500 && code < 600) ||
       msg.includes("fetch") ||
       msg.includes("failed") ||
@@ -84,19 +103,39 @@ export default function Login() {
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-14">
-      <div className="max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/30 backdrop-blur-md">
+    <div
+      className={`px-4 md:px-6 lg:px-8 py-14 ${
+        isDark ? "bg-[rgba(8,9,12,0.15)]" : "bg-slate-50"
+      }`}
+    >
+      <div
+        className={`max-w-md mx-auto rounded-2xl shadow-2xl backdrop-blur-md border ${
+          isDark
+            ? "bg-white/5 border-white/10 shadow-black/30"
+            : "bg-white border-slate-200 shadow-slate-200/70"
+        }`}
+      >
         {/* Header */}
         <div className="px-6 pt-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome Back 👋</h1>
-          <p className="text-sm text-white/60 mt-1">
+          <h1
+            className={`text-2xl font-semibold tracking-tight ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
+            Welcome Back 👋
+          </h1>
+          <p className={isDark ? "text-sm text-white/60 mt-1" : "text-sm text-slate-500 mt-1"}>
             Choose your role, then enter your credentials.
           </p>
         </div>
 
+        {/* Tabs */}
         <div className="px-6 pt-5">
-          {/* Segmented Tabs */}
-          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white/10 border border-white/10">
+          <div
+            className={`inline-flex items-center gap-1 p-1 rounded-xl border ${
+              isDark ? "bg-white/10 border-white/10" : "bg-slate-100 border-slate-100"
+            }`}
+          >
             {TABS.map((t) => {
               const selected = t.key === tab;
               return (
@@ -105,9 +144,14 @@ export default function Login() {
                   type="button"
                   onClick={() => setTab(t.key)}
                   className={[
-                    "px-3 py-1.5 text-sm rounded-lg transition-colors",
-                    "focus:outline-none focus:ring-2 focus:ring-emerald-400/70",
-                    selected ? "text-white bg-white/15" : "text-white/80 hover:text-white hover:bg-white/10",
+                    "px-3 py-1.5 text-sm rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/70",
+                    selected
+                      ? isDark
+                        ? "text-white bg-white/15"
+                        : "text-slate-900 bg-white"
+                      : isDark
+                        ? "text-white/80 hover:text-white hover:bg-white/10"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/60",
                   ].join(" ")}
                 >
                   {t.label}
@@ -120,15 +164,21 @@ export default function Login() {
         {/* Form */}
         <form onSubmit={onSubmit} className="px-6 pt-5 pb-6 space-y-4">
           {waking && (
-            <div className="text-xs text-amber-300">
+            <div className={isDark ? "text-xs text-amber-300" : "text-xs text-amber-700"}>
               Getting things ready… waking the server now.
             </div>
           )}
 
           <label className="block">
-            <div className="text-xs text-white/65 mb-1">Email</div>
+            <div className={isDark ? "text-xs text-white/65 mb-1" : "text-xs text-slate-600 mb-1"}>
+              Email
+            </div>
             <input
-              className="w-full rounded-lg bg-black/30 border border-white/15 px-3 py-2 text-white placeholder-white/35 outline-none focus:ring-2 focus:ring-emerald-400/70 focus:border-emerald-400/60"
+              className={`w-full rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400/70 ${
+                isDark
+                  ? "bg-black/30 border border-white/15 text-white placeholder-white/35 focus:border-emerald-400/60"
+                  : "bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-emerald-400/60"
+              }`}
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -138,10 +188,16 @@ export default function Login() {
           </label>
 
           <label className="block">
-            <div className="text-xs text-white/65 mb-1">Password</div>
+            <div className={isDark ? "text-xs text-white/65 mb-1" : "text-xs text-slate-600 mb-1"}>
+              Password
+            </div>
             <input
               type="password"
-              className="w-full rounded-lg bg-black/30 border border-white/15 px-3 py-2 text-white placeholder-white/35 outline-none focus:ring-2 focus:ring-emerald-400/70 focus:border-emerald-400/60"
+              className={`w-full rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-400/70 ${
+                isDark
+                  ? "bg-black/30 border border-white/15 text-white placeholder-white/35 focus:border-emerald-400/60"
+                  : "bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:border-emerald-400/60"
+              }`}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -149,17 +205,21 @@ export default function Login() {
             />
           </label>
 
-          {err && <div className="text-sm text-rose-400">{err}</div>}
+          {err && (
+            <div className={isDark ? "text-sm text-rose-300" : "text-sm text-rose-600"}>
+              {err}
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium
-                         bg-emerald-500 text-black shadow-sm transition
-                         hover:bg-emerald-600 active:translate-y-[1px]
-                         focus:outline-none focus:ring-2 focus:ring-emerald-400/70
-                         disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-400/70 disabled:opacity-60 disabled:cursor-not-allowed ${
+                isDark
+                  ? "bg-emerald-500 text-black hover:bg-emerald-400"
+                  : "bg-emerald-500 text-white hover:bg-emerald-600"
+              }`}
             >
               {loading ? "Logging in…" : "Login"}
             </button>
@@ -167,14 +227,22 @@ export default function Login() {
             <button
               type="button"
               onClick={fillDemo}
-              className="text-sm underline underline-offset-2 opacity-90 hover:opacity-100"
+              className={
+                isDark
+                  ? "text-sm underline underline-offset-2 opacity-90 hover:opacity-100"
+                  : "text-sm text-slate-700 underline underline-offset-2 hover:text-slate-900"
+              }
             >
               Use test creds
             </button>
           </div>
 
           {/* Helper */}
-          <div className="pt-3 text-xs text-white/60 space-y-1">
+          <div
+            className={`pt-3 text-xs space-y-1 ${
+              isDark ? "text-white/60" : "text-slate-500"
+            }`}
+          >
             <p>
               <b>Tip:</b> The role toggle is a UI hint. Your access is decided by your
               account’s role on the server.

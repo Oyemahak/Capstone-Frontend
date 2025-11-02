@@ -1,69 +1,121 @@
-// src/pages/ProjectDetail.jsx
-import { useParams, Link } from "react-router-dom";
+// src/pages/Projects.jsx
 import Container from "../components/layout/Container.jsx";
+import SectionTitle from "../components/SectionTitle.jsx";
+import Badge from "../components/ui/Badge.jsx";
 import Meta from "../components/Meta.jsx";
 import { projects } from "../data/projects.js";
+import { LuExternalLink } from "react-icons/lu";
+import { useTheme } from "@/lib/theme.js";
 
-export default function ProjectDetail() {
-  const { id } = useParams();
-  const p = projects.find((x) => x.id === id);
-
-  if (!p) {
-    return (
-      <main className="section main-pad-top">
-        <Container className="container-edge">
-          <Meta title="Project not found — MSPixelPulse" />
-          <div className="card-surface p-8 text-center">
-            <h1 className="text-2xl font-black mb-2">Project not found</h1>
-            <p className="text-textSub text-desc">Please pick a project from the list.</p>
-            <Link className="btn btn-primary mt-6" to="/projects">Back to Projects</Link>
-          </div>
-        </Container>
-      </main>
-    );
-  }
+export default function Projects() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
-    <main className="section main-pad-top">
-      <Meta title={`${p.title} — MSPixelPulse`} description={p.summary} />
-      <Container className="container-edge">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <img
-            src={p.thumb}
-            alt={p.title}
-            className="w-full h-80 object-cover rounded-2xl border border-white/5"
-          />
-          <div>
-            <h1 className="text-3xl font-extrabold">{p.title}</h1>
-            <div className="mt-3 flex gap-2 flex-wrap">
-              {p.stack.map((s) => (
-                <span key={s} className="badge">{s}</span>
-              ))}
-            </div>
-            <p className="mt-4 text-textSub text-desc">
-              {p.summary} We focused on speed, clarity, and conversion.
-            </p>
+    <section className="section">
+      <Meta
+        title="Projects — MSPixelPulse"
+        description="A few recent projects across React, WordPress, and Wix. We keep performance and clarity front and center."
+      />
 
-            <div className="mt-6 flex gap-3">
-              {p.live ? (
-                <a
-                  className="btn btn-primary"
-                  href={p.live}
-                  target="_blank"
-                  rel="noreferrer"
+      <Container>
+        <SectionTitle
+          eyebrow="Projects"
+          title={isDark ? "Explore our work" : "Explore our work"}
+          centered
+        />
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {projects.map((p) => {
+            const href = p.live || "#";
+            const isExternal = Boolean(p.live);
+
+            return (
+              <a
+                key={p.id}
+                href={href}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noreferrer" : undefined}
+                className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl"
+                aria-label={isExternal ? `${p.title} (opens in new tab)` : p.title}
+              >
+                {/* Thumb */}
+                <div
+                  className={
+                    isDark
+                      ? "overflow-hidden rounded-2xl border border-white/5 glass-hover"
+                      : "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  }
                 >
-                  View live site
-                </a>
-              ) : (
-                <button className="btn btn-outline" disabled>
-                  Live link coming soon
-                </button>
-              )}
-              <Link className="btn btn-outline" to="/contact">Start similar project</Link>
-            </div>
-          </div>
+                  <img
+                    className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    src={p.thumb}
+                    alt={p.title}
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* Card */}
+                <div
+                  className={
+                    isDark
+                      ? "card-surface px-5 py-4 -mt-5 relative"
+                      : "px-5 py-4 -mt-5 relative rounded-2xl bg-white border border-slate-200 shadow-sm"
+                  }
+                >
+                  {/* badges */}
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {p.stack.slice(0, 3).map((s) =>
+                      isDark ? (
+                        <Badge key={s}>{s}</Badge>
+                      ) : (
+                        <span
+                          key={s}
+                          className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1"
+                        >
+                          {s}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {/* title + external hint */}
+                  <div
+                    className={
+                      isDark
+                        ? "flex items-center gap-2 font-extrabold"
+                        : "flex items-center gap-2 font-extrabold text-slate-900"
+                    }
+                  >
+                    <span className="truncate">{p.title}</span>
+                    {isExternal && (
+                      <LuExternalLink
+                        className={
+                          isDark
+                            ? "h-4 w-4 text-white/70 group-hover:text-white/90 transition-colors"
+                            : "h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-colors"
+                        }
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+
+                  {/* summary */}
+                  <div
+                    className={
+                      isDark
+                        ? "text-textSub text-desc mt-1"
+                        : "text-slate-500 text-sm mt-1 leading-relaxed"
+                    }
+                  >
+                    {p.summary}
+                  </div>
+                </div>
+              </a>
+            );
+          })}
         </div>
       </Container>
-    </main>
+    </section>
   );
 }

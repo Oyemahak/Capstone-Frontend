@@ -3,12 +3,16 @@ import { useState } from "react";
 import Container from "../components/layout/Container.jsx";
 import SectionTitle from "../components/SectionTitle.jsx";
 import { FORMS_BASE } from "@/lib/forms.js";
+import { useTheme } from "@/lib/theme.js";
 
 /* Icons */
 import { SiWhatsapp } from "react-icons/si";
 import { LuCalendar, LuSend } from "react-icons/lu";
 
 export default function Contact() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState("");
@@ -54,7 +58,11 @@ export default function Contact() {
   return (
     <section className="section">
       <Container>
-        <SectionTitle eyebrow="Contact" title="Tell us about your project" align="left" />
+        <SectionTitle
+          eyebrow="Contact"
+          title={isDark ? "Tell us about your project" : "Tell us about your project"}
+          align="left"
+        />
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Form */}
@@ -62,7 +70,11 @@ export default function Contact() {
             <input
               type="text"
               autoComplete="name"
-              className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+              className={
+                isDark
+                  ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                  : "w-full h-12 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+              }
               placeholder="Your name"
               value={form.name}
               onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
@@ -72,7 +84,11 @@ export default function Contact() {
             <input
               type="email"
               autoComplete="email"
-              className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+              className={
+                isDark
+                  ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                  : "w-full h-12 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+              }
               placeholder="Email"
               value={form.email}
               onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
@@ -81,7 +97,11 @@ export default function Contact() {
             />
             <textarea
               rows={6}
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3"
+              className={
+                isDark
+                  ? "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3"
+                  : "w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-slate-900"
+              }
               placeholder="Your message"
               value={form.message}
               onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))}
@@ -90,56 +110,119 @@ export default function Contact() {
             />
 
             <div className="flex flex-wrap items-center gap-3">
-              <button className="btn btn-primary" disabled={submitting} type="submit">
-                <LuSend className="mr-2 h-5 w-5" aria-hidden="true" />
+              <button
+                className={
+                  isDark
+                    ? "btn btn-primary"
+                    : "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[#2563ff] hover:bg-[#2056da] text-white font-semibold"
+                }
+                disabled={submitting}
+                type="submit"
+              >
+                <LuSend className="mr-1 h-5 w-5" aria-hidden="true" />
                 {submitting ? "Sending…" : "Send message"}
               </button>
 
-              {note && <div className="text-sm text-white/70 min-w-full">{note}</div>}
+              {note && (
+                <div
+                  className={
+                    isDark
+                      ? "text-sm text-white/70 min-w-full"
+                      : "text-sm text-slate-600 min-w-full"
+                  }
+                >
+                  {note}
+                </div>
+              )}
             </div>
           </form>
 
           {/* Side card */}
-          <div className="card-surface p-5">
-            <div className="font-black">How we’ll respond</div>
-            <ul className="text-textSub mt-3 space-y-2 text-sm">
-              <li>• You’ll get a reply within 1 business day.</li>
-              <li>• We’ll invite you to the client portal if it’s a fit.</li>
-              <li>• You can track progress, files, and discussions in one place.</li>
-            </ul>
-          </div>
+          {isDark ? (
+            <div className="card-surface p-5 rounded-2xl">
+              <div className="font-black">How we’ll respond</div>
+              <ul className="text-textSub mt-3 space-y-2 text-sm">
+                <li>• You’ll get a reply within 1 business day.</li>
+                <li>• We’ll invite you to the client portal if it’s a fit.</li>
+                <li>• You can track progress, files, and discussions in one place.</li>
+              </ul>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-5">
+              <div className="font-semibold text-slate-900">How we’ll respond</div>
+              <ul className="text-slate-600 mt-3 space-y-2 text-sm">
+                <li>• You’ll get a reply within 1 business day.</li>
+                <li>• We’ll invite you to the client portal if it’s a fit.</li>
+                <li>• You can track progress, files, and discussions in one place.</li>
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Inline CTA */}
-        <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto_auto] gap-4 items-center glass-hover">
-          <div>
-            <h3 className="text-2xl font-black">Have a project in mind?</h3>
-            <p className="text-textSub mt-1 text-[16px] md:text-[18px] leading-relaxed">
-              Tell us your goals — we’ll propose the simplest path to launch.
-            </p>
+        {isDark ? (
+          <div className="mt-12 card-surface p-6 md:p-8 rounded-2xl grid md:grid-cols-[1fr_auto_auto] gap-4 items-center glass-hover">
+            <div>
+              <h3 className="text-2xl font-black">Have a project in mind?</h3>
+              <p className="text-textSub mt-1 text-[16px] md:text-[18px] leading-relaxed">
+                Tell us your goals — we’ll propose the simplest path to launch.
+              </p>
+            </div>
+
+            <a
+              className="btn btn-outline btn-shiny"
+              href={waHref}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Text me on WhatsApp"
+            >
+              <SiWhatsapp className="mr-2 h-5 w-5" aria-hidden="true" />
+              Text me on WhatsApp
+            </a>
+
+            <a
+              className="btn btn-outline"
+              href="https://calendly.com/mspixelpulse/30min"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <LuCalendar className="mr-2 h-5 w-5" aria-hidden="true" />
+              Book appointment
+            </a>
           </div>
+        ) : (
+          <div className="mt-12 rounded-2xl bg-white border border-slate-200 shadow-sm p-6 md:p-8 grid md:grid-cols-[1fr_auto_auto] gap-4 items-center">
+            <div>
+              <h3 className="text-2xl font-black text-slate-900">
+                Have a project in mind?
+              </h3>
+              <p className="text-slate-500 mt-1">
+                Tell us your goals — we’ll propose the simplest path to launch.
+              </p>
+            </div>
 
-          <a
-            className="btn btn-outline btn-shiny"
-            href={waHref}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Text me on WhatsApp"
-          >
-            <SiWhatsapp className="mr-2 h-5 w-5" aria-hidden="true" />
-            Text me on WhatsApp
-          </a>
+            <a
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-slate-900 text-white font-semibold shadow-sm"
+              href={waHref}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Text me on WhatsApp"
+            >
+              <SiWhatsapp className="h-5 w-5" aria-hidden="true" />
+              Text me on WhatsApp
+            </a>
 
-          <a
-            className="btn btn-outline"
-            href="https://calendly.com/mspixelpulse/30min"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <LuCalendar className="mr-2 h-5 w-5" aria-hidden="true" />
-            Book appointment
-          </a>
-        </div>
+            <a
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold shadow-sm"
+              href="https://calendly.com/mspixelpulse/30min"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <LuCalendar className="h-5 w-5" aria-hidden="true" />
+              Book appointment
+            </a>
+          </div>
+        )}
       </Container>
     </section>
   );

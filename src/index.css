@@ -1,13 +1,41 @@
-/* src/index.css — lean public-only */
+/* src/index.css — dark-first, light optional */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Base */
+/* ─────────────────────────────────────────────
+   CORE TOKENS (dark first)
+   ───────────────────────────────────────────── */
 :root {
+  /* dark (current working look) */
+  --bg: radial-gradient(1200px 480px at 60% 120%, rgba(96, 71, 255, 0.12), #0b0b0f 70%);
+  --surface: rgba(11, 11, 15, 0.4);
+  --textMain: #ffffff;
+  --textSub: rgba(255, 255, 255, 0.6);
+  --primary: #5227ff;
+  --primaryAccent: #8b6cff;
+  --inputBg: rgba(255, 255, 255, 0.03);
+  --borderSoft: rgba(255, 255, 255, 0.1);
+  --radius-xl: 1.5rem;
+  --header-h: 4rem;
   scrollbar-gutter: stable;
 }
 
+/* light scheme — applied when html has NO data-theme="dark" */
+html:not([data-theme="dark"]) {
+  --bg: radial-gradient(circle at top, #f6f7fb 0%, #ecf0f6 42%, #e7eaf0 100%);
+  --surface: rgba(255, 255, 255, 0.92);
+  --textMain: #0f172a;
+  --textSub: rgba(15, 23, 42, 0.65);
+  --primary: #2563ff;
+  --primaryAccent: #1d4fd1;
+  --inputBg: rgba(255, 255, 255, 1);
+  --borderSoft: rgba(15, 23, 42, 0.06);
+}
+
+/* ─────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────── */
 html,
 body,
 #root {
@@ -15,14 +43,47 @@ body,
 }
 
 body {
-  @apply text-textMain antialiased bg-transparent;
+  @apply antialiased;
+  background: var(--bg);
+  color: var(--textMain);
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 html {
   overflow-y: scroll;
 }
 
-/* Layout */
+/* add decorative background blobs for light only */
+html:not([data-theme="dark"]) body::before,
+html:not([data-theme="dark"]) body::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: -2;
+}
+
+html:not([data-theme="dark"]) body::before {
+  top: -120px;
+  right: -120px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(37, 99, 255, 0.25), transparent 60%);
+  filter: blur(6px);
+}
+
+html:not([data-theme="dark"]) body::after {
+  bottom: -140px;
+  left: -140px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(139, 108, 255, 0.22), transparent 62%);
+  filter: blur(8px);
+}
+
+/* ─────────────────────────────────────────────
+   LAYOUT HELPERS
+   ───────────────────────────────────────────── */
 .container-edge {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
@@ -34,6 +95,7 @@ html {
 .card,
 .card-surface {
   @apply bg-surface/80 backdrop-blur border border-white/5 shadow-card rounded-2xl;
+  transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-pad {
@@ -73,9 +135,16 @@ html {
   @apply mt-5;
 }
 
-/* Buttons & badges */
+/* ─────────────────────────────────────────────
+   BUTTONS / BADGES
+   ───────────────────────────────────────────── */
 .btn {
   @apply inline-flex items-center justify-center font-bold rounded-xl h-11 px-5;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn-sm {
@@ -83,7 +152,12 @@ html {
 }
 
 .btn-primary {
-  @apply bg-primary hover:bg-primaryAccent text-white;
+  @apply text-white;
+  background: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primaryAccent);
 }
 
 .btn-outline {
@@ -98,7 +172,63 @@ html {
   @apply h-8 w-8 inline-grid place-items-center rounded-lg hover:bg-white/10;
 }
 
-/* Text helpers */
+/* shiny glass button (keep) */
+.btn-shiny {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  transition: box-shadow 0.18s ease, transform 0.12s ease, border-color 0.18s ease;
+  box-shadow:
+    0 18px 44px rgba(12, 12, 18, 0.5),
+    0 6px 18px rgba(12, 12, 18, 0.8),
+    0 2px 10px rgba(82, 39, 255, 1);
+}
+
+.btn-shiny:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 12px 28px rgba(12, 12, 18, 0.26),
+    0 4px 12px rgba(12, 12, 18, 0.2),
+    0 1px 6px rgba(82, 39, 255, 0.1);
+}
+
+.btn-shiny:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.12),
+    0 14px 36px rgba(12, 12, 18, 0.3);
+}
+
+@media (max-width: 480px) {
+  .btn-shiny {
+    box-shadow:
+      0 14px 36px rgba(12, 12, 18, 0.32),
+      0 5px 14px rgba(12, 12, 18, 0.24),
+      0 2px 8px rgba(82, 39, 255, 0.12);
+  }
+
+  .btn-shiny:hover {
+    box-shadow:
+      0 10px 24px rgba(12, 12, 18, 0.24),
+      0 3px 10px rgba(12, 12, 18, 0.18),
+      0 1px 6px rgba(82, 39, 255, 0.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .btn-shiny,
+  .btn-shiny:hover {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    transform: none;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   TEXT HELPERS
+   ───────────────────────────────────────────── */
 .text-muted {
   @apply text-white/80;
 }
@@ -129,7 +259,7 @@ html {
 
 .kpi-card:hover {
   @apply bg-white/5;
-  transition: background-color .15s;
+  transition: background-color 0.15s;
 }
 
 .kpi-label {
@@ -140,16 +270,27 @@ html {
   @apply text-3xl font-black mt-1;
 }
 
-/* Public forms (minimal) */
+/* ─────────────────────────────────────────────
+   FORMS
+   ───────────────────────────────────────────── */
 input,
 select,
 textarea {
   @apply w-full rounded-xl bg-white/5 border border-white/10 px-4 h-11;
+  transition: border 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 
 textarea,
 .form-textarea {
   @apply h-40 py-3 resize-y;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border: 1px solid rgba(82, 39, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(82, 39, 255, 0.25);
 }
 
 .form-narrow {
@@ -168,20 +309,24 @@ textarea,
   @apply text-xs text-white/65 mb-1;
 }
 
-/* Filters used on public lists (kept generic) */
+/* ─────────────────────────────────────────────
+   FILTERS
+   ───────────────────────────────────────────── */
 .filters-grid {
   @apply card-pad;
   display: grid;
-  gap: .75rem;
+  gap: 0.75rem;
 }
 
-@media (min-width:768px) {
+@media (min-width: 768px) {
   .filters-grid {
     grid-template-columns: 1fr 200px;
   }
 }
 
-/* Liquid canvas container (hero bg) */
+/* ─────────────────────────────────────────────
+   LIQUID EFFECT HOLDER
+   ───────────────────────────────────────────── */
 .liquid-ether-container {
   position: relative;
   overflow: hidden;
@@ -190,13 +335,15 @@ textarea,
   touch-action: none;
 }
 
-/* Public-only effects */
+/* ─────────────────────────────────────────────
+   ANIMATIONS
+   ───────────────────────────────────────────── */
 .text-desc {
   font-size: 16px;
   line-height: 1.6;
 }
 
-@media (min-width:768px) {
+@media (min-width: 768px) {
   .text-desc {
     font-size: 18px;
   }
@@ -215,10 +362,12 @@ textarea,
 }
 
 .animate-fade-up {
-  animation: fadeUp .6s ease-out both;
+  animation: fadeUp 0.6s ease-out both;
 }
 
-/* Includes card */
+/* ─────────────────────────────────────────────
+   INCLUDE PANEL (dark look)
+   ───────────────────────────────────────────── */
 .include-panel {
   position: relative;
   border-radius: 1.5rem;
@@ -229,7 +378,7 @@ textarea,
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 60px rgba(82, 39, 255, 0.15);
 }
 
-@media (min-width:768px) {
+@media (min-width: 768px) {
   .include-panel {
     padding: 1.75rem;
   }
@@ -246,12 +395,12 @@ textarea,
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
-  padding: .9rem 1.1rem;
-  transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  padding: 0.9rem 1.1rem;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .include-pill:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
@@ -263,10 +412,10 @@ textarea,
   border-radius: 1.6rem;
   padding: 1px;
   background:
-    linear-gradient(120deg, #5B8CFF, transparent 30%),
-    linear-gradient(300deg, #B19EEF, transparent 30%),
-    linear-gradient(60deg, #FF9FFC, transparent 30%),
-    linear-gradient(0deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .08));
+    linear-gradient(120deg, #5b8cff, transparent 30%),
+    linear-gradient(300deg, #b19eef, transparent 30%),
+    linear-gradient(60deg, #ff9ffc, transparent 30%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -287,7 +436,9 @@ textarea,
   }
 }
 
-/* Reviews strip */
+/* ─────────────────────────────────────────────
+   REVIEWS / FEEDBACK (DO NOT TOUCH)
+   ───────────────────────────────────────────── */
 .glass-tint {
   background: radial-gradient(1200px 400px at 60% 120%, rgba(96, 71, 255, 0.12), transparent 60%), rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -301,7 +452,7 @@ textarea,
   padding: 1rem 1.1rem 1.1rem;
 }
 
-@media (min-width:768px) {
+@media (min-width: 768px) {
   .review-card {
     padding: 1.1rem 1.25rem 1.25rem;
   }
@@ -314,95 +465,104 @@ textarea,
   display: grid;
   place-items: center;
   font-weight: 800;
-  color: #0B0B0F;
-  background: conic-gradient(from 180deg, #5B8CFF, #FF9FFC, #B19EEF, #5B8CFF);
+  color: #0b0b0f;
+  background: conic-gradient(from 180deg, #5b8cff, #ff9ffc, #b19eef, #5b8cff);
 }
 
 .verify-dot {
   display: inline-block;
-  font-size: .725rem;
+  font-size: 0.725rem;
   line-height: 1;
-  color: #7DD3FC;
-  background: rgba(125, 211, 252, .15);
-  border: 1px solid rgba(125, 211, 252, .35);
+  color: #7dd3fc;
+  background: rgba(125, 211, 252, 0.15);
+  border: 1px solid rgba(125, 211, 252, 0.35);
   border-radius: 9999px;
-  padding: .05rem .3rem;
+  padding: 0.05rem 0.3rem;
   transform: translateY(-1px);
 }
 
 .stars {
-  letter-spacing: .15rem;
-  background: linear-gradient(90deg, #FFD166, #FFE29A);
+  letter-spacing: 0.15rem;
+  background: linear-gradient(90deg, #ffd166, #ffe29a);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 0 8px rgba(255, 209, 102, .25);
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.25);
   font-size: 1rem;
 }
 
 .review-quote {
   @apply text-white/90 leading-relaxed;
-  font-size: .95rem;
+  font-size: 0.95rem;
 }
 
-@media (min-width:768px) {
+@media (min-width: 768px) {
   .review-quote {
     font-size: 1.05rem;
   }
 }
 
-.google-g {
-  color: #4285F4;
-  font-weight: 800;
-}
-
-.google-o1 {
-  color: #EA4335;
-  font-weight: 800;
-}
-
-.google-o2 {
-  color: #FBBC05;
-  font-weight: 800;
-}
-
-.google-l {
-  color: #34A853;
-  font-weight: 800;
-}
-
-.google-e {
-  color: #EA4335;
-  font-weight: 800;
-}
-
-.review-arrow-outer {
+.review-arrow {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
+  z-index: 20;
   display: grid;
   place-items: center;
-  height: 42px;
-  width: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.95);
   font-size: 24px;
-  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+  line-height: 1;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 
-.review-arrow-outer:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-50%) scale(1.05);
+.review-arrow--left {
+  left: 0;
+  top: 104px;
+  transform: translate(-50%, -50%);
 }
 
-/* Modal used on public pages */
+.review-arrow--right {
+  right: 0;
+  top: 104px;
+  transform: translate(50%, -50%);
+}
+
+.review-arrow:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.review-arrow--right:hover {
+  transform: translate(50%, -50%) scale(1.05);
+}
+
+.review-arrow:active {
+  transform: translate(-50%, -50%) scale(0.98);
+}
+
+.review-arrow--right:active {
+  transform: translate(50%, -50%) scale(0.98);
+}
+
+@media (max-width: 767px) {
+  .review-arrow {
+    display: none;
+  }
+}
+
+/* modal (keep) */
 .modal-panel {
   @apply w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl p-6;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 25px 80px rgba(0, 0, 0, 0.45);
 }
 
+/* glass-hover (keep) */
 .glass-hover {
   position: relative;
   overflow: hidden;
@@ -436,102 +596,139 @@ textarea,
   }
 }
 
-/* Arrow buttons hugging the content width */
-.review-arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 24px;
-  line-height: 1;
-  backdrop-filter: blur(8px);
-  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+/* ─────────────────────────────────────────────
+   LIGHT OVERRIDES (this is what fixes your screenshots)
+   ───────────────────────────────────────────── */
+
+/* body already gets var(--bg) above */
+html:not([data-theme="dark"]) body {
+  background: var(--bg);
+  color: var(--textMain);
 }
 
-/* Nudge OUTSIDE the frame edges without changing layout width */
-.review-arrow--left  { left: 0; top:104px; transform: translate(-50%, -50%); }
-.review-arrow--right { right: 0; top:104px; transform: translate( 50%, -50%); }
-
-.review-arrow:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.22);
-  transform: translate(-50%, -50%) scale(1.05);
-}
-.review-arrow--right:hover {
-  transform: translate(50%, -50%) scale(1.05);
-}
-.review-arrow:active {
-  transform: translate(-50%, -50%) scale(0.98);
-}
-.review-arrow--right:active {
-  transform: translate(50%, -50%) scale(0.98);
+/* make the fixed header light + glassy (your JSX has a dark color) */
+html:not([data-theme="dark"]) header {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  backdrop-filter: saturate(160%) blur(16px);
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.04);
 }
 
-/* Optional: ensure cards don't push arrows around on tiny screens */
-@media (max-width: 767px) {
-  .review-arrow { display: none; }
-}
-/* Subtle frosted drop-shadow button (no shiny border) */
-.btn-shiny {
-  position: relative;
-  isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: transparent; /* keep your Tailwind bg if combined */
-  transition: box-shadow .18s ease, transform .12s ease, border-color .18s ease;
-
-  /* default glow (stronger before hover) */
-  box-shadow:
-    0 18px 44px rgba(12, 12, 18, 0.5),
-    0 6px 18px rgba(12, 12, 18, 0.8),
-    0 2px 10px rgba(82, 39, 255, 1); /* slight theme tint */
+/* cards / surfaces become white */
+html:not([data-theme="dark"]) .card,
+html:not([data-theme="dark"]) .card-surface {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06);
 }
 
-/* Hover: shadow fades (lighter + tighter), minimal lift if you like */
-.btn-shiny:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow:
-    0 12px 28px rgba(12, 12, 18, 0.26),
-    0 4px 12px rgba(12, 12, 18, 0.20),
-    0 1px 6px rgba(82, 39, 255, 0.10);
+/* project cards — the small ones under Projects page */
+html:not([data-theme="dark"]) .card-surface+.card-surface,
+html:not([data-theme="dark"]) .card-surface.project-card {
+  background: rgba(255, 255, 255, 0.95);
 }
 
-/* Focus style for keyboard users (keeps your aesthetic) */
-.btn-shiny:focus-visible {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.12),
-    0 14px 36px rgba(12, 12, 18, 0.30);
+/* outline buttons should be light */
+html:not([data-theme="dark"]) .btn-outline {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #0f172a;
 }
 
-/* Reduce heavy shadows on very small screens to avoid visual clutter */
-@media (max-width: 480px) {
-  .btn-shiny {
-    box-shadow:
-      0 14px 36px rgba(12, 12, 18, 0.32),
-      0 5px 14px rgba(12, 12, 18, 0.24),
-      0 2px 8px rgba(82, 39, 255, 0.12);
-  }
-  .btn-shiny:hover {
-    box-shadow:
-      0 10px 24px rgba(12, 12, 18, 0.24),
-      0 3px 10px rgba(12, 12, 18, 0.18),
-      0 1px 6px rgba(82, 39, 255, 0.08);
-  }
+html:not([data-theme="dark"]) .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.85);
 }
 
-/* Respect user preference for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .btn-shiny,
-  .btn-shiny:hover {
-    transition: border-color .18s ease, box-shadow .18s ease;
-    transform: none;
-  }
+/* inputs — light, subtle */
+html:not([data-theme="dark"]) input,
+html:not([data-theme="dark"]) textarea,
+html:not([data-theme="dark"]) select {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html:not([data-theme="dark"]) input::placeholder,
+html:not([data-theme="dark"]) textarea::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+/* hero include panel -> pill layout (like screenshot) */
+html:not([data-theme="dark"]) .include-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(205, 212, 227, 0.6);
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.08);
+}
+
+html:not([data-theme="dark"]) .include-title {
+  color: #0f172a;
+}
+
+html:not([data-theme="dark"]) .include-pill {
+  background: rgba(243, 246, 252, 0.7);
+  border: 1px solid rgba(226, 230, 240, 0.9);
+}
+
+html:not([data-theme="dark"]) .include-pill:hover {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+/* badges — white-on-light fix */
+html:not([data-theme="dark"]) .badge {
+  background: rgba(229, 234, 244, 0.9);
+  color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* CTA bar (the big one after hero) */
+html:not([data-theme="dark"]) .glass-hover {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.035);
+}
+
+/* footer should be light bar, not dark slab */
+html:not([data-theme="dark"]) footer {
+  background: rgba(226, 230, 238, 0.85);
+  border-top: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+/* mobile sheet (header menu) */
+html:not([data-theme="dark"]) .bg-white\/\[0\.04\] {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* text in hero sub heading */
+html:not([data-theme="dark"]) .text-textSub {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+
+/* ─────────────────────────────────────────────
+   LIGHT OVERRIDES (safe)
+   We don't touch feedback classes here.
+   ───────────────────────────────────────────── */
+html:not([data-theme="dark"]) body {
+  background: var(--bg);
+  color: var(--textMain);
+}
+
+html:not([data-theme="dark"]) .btn-outline {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html:not([data-theme="dark"]) input,
+html:not([data-theme="dark"]) textarea {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html:not([data-theme="dark"]) .include-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(190, 195, 210, 0.35);
+  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.08);
 }

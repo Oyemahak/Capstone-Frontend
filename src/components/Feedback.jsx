@@ -1,9 +1,11 @@
+// src/components/Feedback.jsx
 import { useMemo, useState } from "react";
 import Container from "@/components/layout/Container.jsx";
 import SectionTitle from "@/components/SectionTitle.jsx";
 import { FORMS_BASE } from "@/lib/forms.js";
+import { useTheme } from "@/lib/theme.js";
 
-/** Testimonials (added 3 more: 1 Canadian, 2 Indian) */
+/** Testimonials (you already had these) */
 const FALLBACK = [
   {
     name: "Sukhdeep Brar",
@@ -44,6 +46,9 @@ const FALLBACK = [
 ];
 
 export default function Feedback() {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [items] = useState(FALLBACK);
   const [idx, setIdx] = useState(0);
 
@@ -51,7 +56,7 @@ export default function Feedback() {
   const prev = () => setIdx((i) => (i - 1 + items.length) % items.length);
   const next = () => setIdx((i) => (i + 1) % items.length);
 
-  // 3-up window like Google reviews
+  // 3-up window
   const trio = useMemo(() => {
     if (!items.length) return [];
     return [
@@ -61,7 +66,7 @@ export default function Feedback() {
     ];
   }, [items, idx]);
 
-  // modal state (unchanged)
+  // modal state
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -118,17 +123,24 @@ export default function Feedback() {
   return (
     <section className="section pt-6">
       <Container>
-        <SectionTitle eyebrow="Feedback" title="What clients say" centered />
+        <SectionTitle
+          eyebrow="Feedback"
+          title={isDark ? "What clients say" : "What clients say"}
+          centered
+        />
 
-        {/* FRAME: fixed width so arrows sit outside without changing page width */}
+        {/* FRAME */}
         <div className="relative mx-auto max-w-6xl px-6 sm:px-8 lg:px-10">
-
-          {/* Arrows: outside the row, vertically centered; hidden on small screens */}
+          {/* Arrows */}
           <button
             type="button"
             aria-label="Previous"
             onClick={prev}
-            className="review-arrow review-arrow--left hidden md:grid"
+            className={
+              isDark
+                ? "review-arrow review-arrow--left hidden md:grid"
+                : "review-arrow review-arrow--left hidden md:grid bg-slate-900/70 border-slate-100/20 text-white"
+            }
           >
             ‹
           </button>
@@ -136,7 +148,11 @@ export default function Feedback() {
             type="button"
             aria-label="Next"
             onClick={next}
-            className="review-arrow review-arrow--right hidden md:grid"
+            className={
+              isDark
+                ? "review-arrow review-arrow--right hidden md:grid"
+                : "review-arrow review-arrow--right hidden md:grid bg-slate-900/70 border-slate-100/20 text-white"
+            }
           >
             ›
           </button>
@@ -144,41 +160,95 @@ export default function Feedback() {
           {/* Cards */}
           <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
             {trio.map((t, i) => (
-              <figure key={`${t.name}-${i}`} className="review-card glass-tint">
+              <figure
+                key={`${t.name}-${i}`}
+                className={
+                  isDark
+                    ? "review-card glass-tint"
+                    : "rounded-2xl bg-white border border-slate-200 shadow-sm p-5 flex flex-col min-h-[210px]"
+                }
+              >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="avatar-pill" aria-hidden>
-                    {String(t.name || "C").trim().charAt(0).toUpperCase()}
-                  </div>
+                  {isDark ? (
+                    <div className="avatar-pill" aria-hidden>
+                      {String(t.name || "C").trim().charAt(0).toUpperCase()}
+                    </div>
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-slate-900/5 text-slate-900 font-bold grid place-items-center">
+                      {String(t.name || "C").trim().charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="leading-tight">
-                    <div className="font-semibold flex items-center gap-1">
+                    <div
+                      className={
+                        isDark
+                          ? "font-semibold flex items-center gap-1"
+                          : "font-semibold flex items-center gap-1 text-slate-900"
+                      }
+                    >
                       {t.name}
                     </div>
-                    <div className="text-white/60 text-xs">{t.business}</div>
+                    <div
+                      className={
+                        isDark ? "text-white/60 text-xs" : "text-slate-500 text-xs"
+                      }
+                    >
+                      {t.business}
+                    </div>
                   </div>
                 </div>
 
-                <div className="stars" aria-hidden>
-                  ★★★★★
-                </div>
+                {/* Stars */}
+                {isDark ? (
+                  <div className="stars" aria-hidden>
+                    ★★★★★
+                  </div>
+                ) : (
+                  <div className="flex gap-1 text-amber-400 text-sm" aria-hidden>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                  </div>
+                )}
 
-                <blockquote className="review-quote mt-2">“{t.message}”</blockquote>
+                <blockquote
+                  className={
+                    isDark
+                      ? "review-quote mt-2"
+                      : "mt-3 text-slate-600 text-sm leading-relaxed"
+                  }
+                >
+                  “{t.message}”
+                </blockquote>
               </figure>
             ))}
           </div>
 
           {/* Dots */}
           <div className="mt-6 flex justify-center gap-2">
-            {items.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={[
-                  "h-2.5 w-2.5 rounded-full transition",
-                  i === idx ? "bg-white/90" : "bg-white/30 hover:bg-white/50",
-                ].join(" ")}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            ))}
+            {items.map((_, i) => {
+              const isActive = i === idx;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setIdx(i)}
+                  className={
+                    isDark
+                      ? [
+                          "h-2.5 w-2.5 rounded-full transition",
+                          isActive ? "bg-white/90" : "bg-white/30 hover:bg-white/50",
+                        ].join(" ")
+                      : [
+                          "h-2.5 w-2.5 rounded-full transition",
+                          isActive ? "bg-slate-900" : "bg-slate-300 hover:bg-slate-400",
+                        ].join(" ")
+                  }
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              );
+            })}
           </div>
 
           {/* Leave a review */}
@@ -188,7 +258,11 @@ export default function Feedback() {
                 setNote("");
                 setOpen(true);
               }}
-              className="btn btn-outline"
+              className={
+                isDark
+                  ? "btn btn-outline"
+                  : "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold shadow-sm hover:bg-slate-50"
+              }
               type="button"
             >
               Leave a review
@@ -203,55 +277,103 @@ export default function Feedback() {
           className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm animate-fade-up"
           onClick={() => setOpen(false)}
         >
-          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="font-black text-lg">Share your feedback</div>
-            <p className="text-textSub text-sm mt-1">
+          <div
+            className={
+              isDark
+                ? "modal-panel"
+                : "w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-xl p-6"
+            }
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={
+                isDark ? "font-black text-lg" : "font-bold text-lg text-slate-900"
+              }
+            >
+              Share your feedback
+            </div>
+            <p className={isDark ? "text-textSub text-sm mt-1" : "text-slate-500 text-sm mt-1"}>
               Your message will be emailed to us.
             </p>
 
             <form className="mt-4 space-y-3" onSubmit={submit}>
               <input
-                className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                className={
+                  isDark
+                    ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                    : "w-full h-11 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+                }
                 placeholder="Your full name"
                 value={form.name}
                 onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
               />
               <input
-                className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                className={
+                  isDark
+                    ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                    : "w-full h-11 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+                }
                 placeholder="Your email"
                 value={form.email}
                 onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
               />
               <input
-                className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                className={
+                  isDark
+                    ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                    : "w-full h-11 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+                }
                 placeholder="Business / Organization"
                 value={form.business}
                 onChange={(e) => setForm((s) => ({ ...s, business: e.target.value }))}
               />
               <input
-                className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                className={
+                  isDark
+                    ? "w-full h-12 rounded-xl bg-white/5 border border-white/10 px-4"
+                    : "w-full h-11 rounded-xl bg-white border border-slate-200 px-4 text-slate-900"
+                }
                 placeholder="Subject (optional)"
                 value={form.subject}
                 onChange={(e) => setForm((s) => ({ ...s, subject: e.target.value }))}
               />
               <textarea
                 rows={5}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3"
+                className={
+                  isDark
+                    ? "w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3"
+                    : "w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-slate-900"
+                }
                 placeholder="Your feedback"
                 value={form.message}
                 onChange={(e) => setForm((s) => ({ ...s, message: e.target.value }))}
               />
-              {note && <div className="text-sm text-white/80">{note}</div>}
+              {note && (
+                <div className={isDark ? "text-sm text-white/80" : "text-sm text-slate-500"}>
+                  {note}
+                </div>
+              )}
 
-              <div className="form-actions justify-end">
+              <div className="form-actions justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="btn btn-outline"
+                  className={
+                    isDark
+                      ? "btn btn-outline"
+                      : "inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-900 font-semibold hover:bg-slate-50"
+                  }
                 >
                   Cancel
                 </button>
-                <button className="btn btn-primary" disabled={sending}>
+                <button
+                  className={
+                    isDark
+                      ? "btn btn-primary"
+                      : "inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-slate-900 text-white font-semibold"
+                  }
+                  disabled={sending}
+                >
                   {sending ? "Sending…" : "Submit"}
                 </button>
               </div>
